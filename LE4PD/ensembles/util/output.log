@@ -1,0 +1,336 @@
+Unknown vendor: "gfortran"
+running build
+running config_cc
+unifing config_cc, config, build_clib, build_ext, build commands --compiler options
+running config_fc
+unifing config_fc, config, build_clib, build_ext, build commands --fcompiler options
+running build_src
+build_src
+building extension "properties_util" sources
+f2py options: []
+f2py:> /var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c
+creating /var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5
+Reading fortran codes...
+	Reading file 'properties_util.f95' (format:free)
+Post-processing...
+	Block: properties_util
+			Block: calculate_bond_vectors
+			Block: calculate_nh_vectors
+			Block: calculate_nh_matrix
+			Block: calculate_r_matrix
+			Block: calculate_contacts
+			Block: calculate_msf
+			Block: calculate_u_matrix
+Post-processing (stage 2)...
+Building modules...
+	Building module "properties_util"...
+		Constructing wrapper function "calculate_bond_vectors"...
+		  calculate_bond_vectors(bond,length,c,[nconf,nres])
+		Constructing wrapper function "calculate_nh_vectors"...
+		  calculate_nh_vectors(bond,length,n,h,[nconf,nres])
+		Constructing wrapper function "calculate_nh_matrix"...
+		  calculate_nh_matrix(mat,c_bond,nh_bond,c_length,nh_length,[nconf,nres])
+		Constructing wrapper function "calculate_r_matrix"...
+		  calculate_r_matrix(r,c,[nconf,nres])
+		Constructing wrapper function "calculate_contacts"...
+		  calculate_contacts(contacts,r,rc,[nconf,nres])
+		Constructing wrapper function "calculate_msf"...
+		  calculate_msf(msf,contacts,eig,temp,[nconf,nres])
+		Constructing wrapper function "calculate_u_matrix"...
+		  calculate_u_matrix(u,bond,msf,[nconf,nres])
+	Wrote C/API module "properties_util" to file "/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c"
+  adding '/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/fortranobject.c' to sources.
+  adding '/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5' to include_dirs.
+copying //anaconda/lib/python3.5/site-packages/numpy/f2py/src/fortranobject.c -> /var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5
+copying //anaconda/lib/python3.5/site-packages/numpy/f2py/src/fortranobject.h -> /var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5
+build_src: building npy-pkg config files
+running build_ext
+customize UnixCCompiler
+customize UnixCCompiler using build_ext
+customize Gnu95FCompiler
+Found executable /usr/local/bin/gfortran
+customize Gnu95FCompiler using build_ext
+building 'properties_util' extension
+compiling C sources
+C compiler: gcc -fno-strict-aliasing -Wsign-compare -Wunreachable-code -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -I//anaconda/include -arch x86_64
+
+creating /var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/var
+creating /var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/var/folders
+creating /var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/var/folders/mz
+creating /var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn
+creating /var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T
+creating /var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c
+creating /var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5
+compile options: '-I/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5 -I//anaconda/lib/python3.5/site-packages/numpy/core/include -I//anaconda/include/python3.5m -c'
+gcc: /var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c
+In file included from /var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:19:
+In file included from /var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/fortranobject.h:13:
+In file included from //anaconda/lib/python3.5/site-packages/numpy/core/include/numpy/arrayobject.h:4:
+In file included from //anaconda/lib/python3.5/site-packages/numpy/core/include/numpy/ndarrayobject.h:18:
+In file included from //anaconda/lib/python3.5/site-packages/numpy/core/include/numpy/ndarraytypes.h:1777:
+//anaconda/lib/python3.5/site-packages/numpy/core/include/numpy/npy_1_7_deprecated_api.h:15:2: warning: "Using deprecated NumPy API, disable it by "          "#defining NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-W#warnings]
+#warning "Using deprecated NumPy API, disable it by " \
+ ^
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:307:118: warning: format specifies type 'long' but the argument has type 'long_long' (aka 'long long') [-Wformat]
+  CHECKSCALAR((shape(bond,1)+1)==nres,"(shape(bond,1)+1)==nres","2nd keyword nres","calculate_bond_vectors:nres=%ld",nres) {
+                                                                                                                ~~~  ^~~~
+                                                                                                                %lld
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:89:66: note: expanded from macro 'CHECKSCALAR'
+    sprintf(errstring, "%s: "show, "("tcheck") failed for "name, var);\
+                                                                 ^~~
+/usr/include/secure/_stdio.h:47:56: note: expanded from macro 'sprintf'
+  __builtin___sprintf_chk (str, 0, __darwin_obsz(str), __VA_ARGS__)
+                                                       ^~~~~~~~~~~
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:312:114: warning: format specifies type 'long' but the argument has type 'long_long' (aka 'long long') [-Wformat]
+  CHECKSCALAR(shape(bond,0)==nconf,"shape(bond,0)==nconf","1st keyword nconf","calculate_bond_vectors:nconf=%ld",nconf) {
+                                                                                                            ~~~  ^~~~~
+                                                                                                            %lld
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:89:66: note: expanded from macro 'CHECKSCALAR'
+    sprintf(errstring, "%s: "show, "("tcheck") failed for "name, var);\
+                                                                 ^~~
+/usr/include/secure/_stdio.h:47:56: note: expanded from macro 'sprintf'
+  __builtin___sprintf_chk (str, 0, __darwin_obsz(str), __VA_ARGS__)
+                                                       ^~~~~~~~~~~
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:460:116: warning: format specifies type 'long' but the argument has type 'long_long' (aka 'long long') [-Wformat]
+  CHECKSCALAR((shape(bond,1)+1)==nres,"(shape(bond,1)+1)==nres","2nd keyword nres","calculate_nh_vectors:nres=%ld",nres) {
+                                                                                                              ~~~  ^~~~
+                                                                                                              %lld
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:89:66: note: expanded from macro 'CHECKSCALAR'
+    sprintf(errstring, "%s: "show, "("tcheck") failed for "name, var);\
+                                                                 ^~~
+/usr/include/secure/_stdio.h:47:56: note: expanded from macro 'sprintf'
+  __builtin___sprintf_chk (str, 0, __darwin_obsz(str), __VA_ARGS__)
+                                                       ^~~~~~~~~~~
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:465:112: warning: format specifies type 'long' but the argument has type 'long_long' (aka 'long long') [-Wformat]
+  CHECKSCALAR(shape(bond,0)==nconf,"shape(bond,0)==nconf","1st keyword nconf","calculate_nh_vectors:nconf=%ld",nconf) {
+                                                                                                          ~~~  ^~~~~
+                                                                                                          %lld
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:89:66: note: expanded from macro 'CHECKSCALAR'
+    sprintf(errstring, "%s: "show, "("tcheck") failed for "name, var);\
+                                                                 ^~~
+/usr/include/secure/_stdio.h:47:56: note: expanded from macro 'sprintf'
+  __builtin___sprintf_chk (str, 0, __darwin_obsz(str), __VA_ARGS__)
+                                                       ^~~~~~~~~~~
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:634:113: warning: format specifies type 'long' but the argument has type 'long_long' (aka 'long long') [-Wformat]
+  CHECKSCALAR((shape(mat,1)+1)==nres,"(shape(mat,1)+1)==nres","2nd keyword nres","calculate_nh_matrix:nres=%ld",nres) {
+                                                                                                           ~~~  ^~~~
+                                                                                                           %lld
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:89:66: note: expanded from macro 'CHECKSCALAR'
+    sprintf(errstring, "%s: "show, "("tcheck") failed for "name, var);\
+                                                                 ^~~
+/usr/include/secure/_stdio.h:47:56: note: expanded from macro 'sprintf'
+  __builtin___sprintf_chk (str, 0, __darwin_obsz(str), __VA_ARGS__)
+                                                       ^~~~~~~~~~~
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:639:109: warning: format specifies type 'long' but the argument has type 'long_long' (aka 'long long') [-Wformat]
+  CHECKSCALAR(shape(mat,0)==nconf,"shape(mat,0)==nconf","1st keyword nconf","calculate_nh_matrix:nconf=%ld",nconf) {
+                                                                                                       ~~~  ^~~~~
+                                                                                                       %lld
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:89:66: note: expanded from macro 'CHECKSCALAR'
+    sprintf(errstring, "%s: "show, "("tcheck") failed for "name, var);\
+                                                                 ^~~
+/usr/include/secure/_stdio.h:47:56: note: expanded from macro 'sprintf'
+  __builtin___sprintf_chk (str, 0, __darwin_obsz(str), __VA_ARGS__)
+                                                       ^~~~~~~~~~~
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:801:108: warning: format specifies type 'long' but the argument has type 'long_long' (aka 'long long') [-Wformat]
+  CHECKSCALAR((shape(r,1)+1)==nres,"(shape(r,1)+1)==nres","2nd keyword nres","calculate_r_matrix:nres=%ld",nres) {
+                                                                                                      ~~~  ^~~~
+                                                                                                      %lld
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:89:66: note: expanded from macro 'CHECKSCALAR'
+    sprintf(errstring, "%s: "show, "("tcheck") failed for "name, var);\
+                                                                 ^~~
+/usr/include/secure/_stdio.h:47:56: note: expanded from macro 'sprintf'
+  __builtin___sprintf_chk (str, 0, __darwin_obsz(str), __VA_ARGS__)
+                                                       ^~~~~~~~~~~
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:806:104: warning: format specifies type 'long' but the argument has type 'long_long' (aka 'long long') [-Wformat]
+  CHECKSCALAR(shape(r,0)==nconf,"shape(r,0)==nconf","1st keyword nconf","calculate_r_matrix:nconf=%ld",nconf) {
+                                                                                                  ~~~  ^~~~~
+                                                                                                  %lld
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:89:66: note: expanded from macro 'CHECKSCALAR'
+    sprintf(errstring, "%s: "show, "("tcheck") failed for "name, var);\
+                                                                 ^~~
+/usr/include/secure/_stdio.h:47:56: note: expanded from macro 'sprintf'
+  __builtin___sprintf_chk (str, 0, __darwin_obsz(str), __VA_ARGS__)
+                                                       ^~~~~~~~~~~
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:932:122: warning: format specifies type 'long' but the argument has type 'long_long' (aka 'long long') [-Wformat]
+  CHECKSCALAR((shape(contacts,1)+1)==nres,"(shape(contacts,1)+1)==nres","2nd keyword nres","calculate_contacts:nres=%ld",nres) {
+                                                                                                                    ~~~  ^~~~
+                                                                                                                    %lld
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:89:66: note: expanded from macro 'CHECKSCALAR'
+    sprintf(errstring, "%s: "show, "("tcheck") failed for "name, var);\
+                                                                 ^~~
+/usr/include/secure/_stdio.h:47:56: note: expanded from macro 'sprintf'
+  __builtin___sprintf_chk (str, 0, __darwin_obsz(str), __VA_ARGS__)
+                                                       ^~~~~~~~~~~
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:937:118: warning: format specifies type 'long' but the argument has type 'long_long' (aka 'long long') [-Wformat]
+  CHECKSCALAR(shape(contacts,0)==nconf,"shape(contacts,0)==nconf","1st keyword nconf","calculate_contacts:nconf=%ld",nconf) {
+                                                                                                                ~~~  ^~~~~
+                                                                                                                %lld
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:89:66: note: expanded from macro 'CHECKSCALAR'
+    sprintf(errstring, "%s: "show, "("tcheck") failed for "name, var);\
+                                                                 ^~~
+/usr/include/secure/_stdio.h:47:56: note: expanded from macro 'sprintf'
+  __builtin___sprintf_chk (str, 0, __darwin_obsz(str), __VA_ARGS__)
+                                                       ^~~~~~~~~~~
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:1072:107: warning: format specifies type 'long' but the argument has type 'long_long' (aka 'long long') [-Wformat]
+  CHECKSCALAR((shape(msf,1)+1)==nres,"(shape(msf,1)+1)==nres","2nd keyword nres","calculate_msf:nres=%ld",nres) {
+                                                                                                     ~~~  ^~~~
+                                                                                                     %lld
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:89:66: note: expanded from macro 'CHECKSCALAR'
+    sprintf(errstring, "%s: "show, "("tcheck") failed for "name, var);\
+                                                                 ^~~
+/usr/include/secure/_stdio.h:47:56: note: expanded from macro 'sprintf'
+  __builtin___sprintf_chk (str, 0, __darwin_obsz(str), __VA_ARGS__)
+                                                       ^~~~~~~~~~~
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:1077:103: warning: format specifies type 'long' but the argument has type 'long_long' (aka 'long long') [-Wformat]
+  CHECKSCALAR(shape(msf,0)==nconf,"shape(msf,0)==nconf","1st keyword nconf","calculate_msf:nconf=%ld",nconf) {
+                                                                                                 ~~~  ^~~~~
+                                                                                                 %lld
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:89:66: note: expanded from macro 'CHECKSCALAR'
+    sprintf(errstring, "%s: "show, "("tcheck") failed for "name, var);\
+                                                                 ^~~
+/usr/include/secure/_stdio.h:47:56: note: expanded from macro 'sprintf'
+  __builtin___sprintf_chk (str, 0, __darwin_obsz(str), __VA_ARGS__)
+                                                       ^~~~~~~~~~~
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:1220:108: warning: format specifies type 'long' but the argument has type 'long_long' (aka 'long long') [-Wformat]
+  CHECKSCALAR((shape(u,1)+1)==nres,"(shape(u,1)+1)==nres","2nd keyword nres","calculate_u_matrix:nres=%ld",nres) {
+                                                                                                      ~~~  ^~~~
+                                                                                                      %lld
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:89:66: note: expanded from macro 'CHECKSCALAR'
+    sprintf(errstring, "%s: "show, "("tcheck") failed for "name, var);\
+                                                                 ^~~
+/usr/include/secure/_stdio.h:47:56: note: expanded from macro 'sprintf'
+  __builtin___sprintf_chk (str, 0, __darwin_obsz(str), __VA_ARGS__)
+                                                       ^~~~~~~~~~~
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:1225:104: warning: format specifies type 'long' but the argument has type 'long_long' (aka 'long long') [-Wformat]
+  CHECKSCALAR(shape(u,0)==nconf,"shape(u,0)==nconf","1st keyword nconf","calculate_u_matrix:nconf=%ld",nconf) {
+                                                                                                  ~~~  ^~~~~
+                                                                                                  %lld
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:89:66: note: expanded from macro 'CHECKSCALAR'
+    sprintf(errstring, "%s: "show, "("tcheck") failed for "name, var);\
+                                                                 ^~~
+/usr/include/secure/_stdio.h:47:56: note: expanded from macro 'sprintf'
+  __builtin___sprintf_chk (str, 0, __darwin_obsz(str), __VA_ARGS__)
+                                                       ^~~~~~~~~~~
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/properties_utilmodule.c:118:12: warning: unused function 'f2py_size' [-Wunused-function]
+static int f2py_size(PyArrayObject* var, ...)
+           ^
+16 warnings generated.
+gcc: /var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/fortranobject.c
+In file included from /var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/fortranobject.c:2:
+In file included from /var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/fortranobject.h:13:
+In file included from //anaconda/lib/python3.5/site-packages/numpy/core/include/numpy/arrayobject.h:4:
+In file included from //anaconda/lib/python3.5/site-packages/numpy/core/include/numpy/ndarrayobject.h:18:
+In file included from //anaconda/lib/python3.5/site-packages/numpy/core/include/numpy/ndarraytypes.h:1777:
+//anaconda/lib/python3.5/site-packages/numpy/core/include/numpy/npy_1_7_deprecated_api.h:15:2: warning: "Using deprecated NumPy API, disable it by "          "#defining NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-W#warnings]
+#warning "Using deprecated NumPy API, disable it by " \
+ ^
+/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5/fortranobject.c:139:18: warning: comparison of integers of different signs: 'Py_ssize_t' (aka 'long') and 'unsigned long' [-Wsign-compare]
+        if (size < sizeof(notalloc)) {
+            ~~~~ ^ ~~~~~~~~~~~~~~~~
+2 warnings generated.
+compiling Fortran sources
+Fortran f77 compiler: /usr/local/bin/gfortran -Wall -g -ffixed-form -fno-second-underscore -arch x86_64 -fPIC -O3 -funroll-loops
+Fortran f90 compiler: /usr/local/bin/gfortran -fbounds-check -arch x86_64 -fPIC -O3 -funroll-loops
+Fortran fix compiler: /usr/local/bin/gfortran -Wall -g -ffixed-form -fno-second-underscore -fbounds-check -arch x86_64 -fPIC -O3 -funroll-loops
+compile options: '-I/var/folders/mz/20v0xs790dn68x6w92y772rc0000gn/T/tmp70xq527c/src.macosx-10.5-x86_64-3.5 -I//anaconda/lib/python3.5/site-packages/numpy/core/include -I//anaconda/include/python3.5m -c'
+gfortran:f90: properties_util.f95
+properties_util.f95:115:30:
+
+                    R(n,i,j) == 0.0001
+                              1
+Error: Invalid character in name at (1)
+properties_util.f95:118:37:
+
+                R(n,i,j) = R(n,i,j)**-1
+                                     1
+Warning: Extension: Unary operator following arithmetic operator (use parentheses) at (1)
+properties_util.f95:112:44:
+
+                            &(C(n,i,0)-C(n,j,0))**2)**0.5
+                                            1
+Warning: Array reference at (1) is out of bounds (0 < 1) in dimension 3
+properties_util.f95:112:35:
+
+                            &(C(n,i,0)-C(n,j,0))**2)**0.5
+                                   1
+Warning: Array reference at (1) is out of bounds (0 < 1) in dimension 3
+properties_util.f95:111:44:
+
+                            &(C(n,i,0)-C(n,j,0))**2+ &
+                                            1
+Warning: Array reference at (1) is out of bounds (0 < 1) in dimension 3
+properties_util.f95:111:35:
+
+                            &(C(n,i,0)-C(n,j,0))**2+ &
+                                   1
+Warning: Array reference at (1) is out of bounds (0 < 1) in dimension 3
+properties_util.f95:110:44:
+
+                 R(n,i,j) = ((C(n,i,0)-C(n,j,0))**2+ &
+                                            1
+Warning: Array reference at (1) is out of bounds (0 < 1) in dimension 3
+properties_util.f95:110:35:
+
+                 R(n,i,j) = ((C(n,i,0)-C(n,j,0))**2+ &
+                                   1
+Warning: Array reference at (1) is out of bounds (0 < 1) in dimension 3
+properties_util.f95:136:58:
+
+     DOUBLE PRECISION,INTENT(in) :: C(1:nconf, 1:nres, 1:3), rc
+                                                          1
+Error: Symbol at (1) is not a DUMMY variable
+properties_util.f95:224:20:
+
+     c = (3.0*Rb*temp)/6.0
+                    1
+Error: Symbol 'temp' at (1) has no IMPLICIT type
+properties_util.f95:115:30:
+
+                    R(n,i,j) == 0.0001
+                              1
+Error: Invalid character in name at (1)
+properties_util.f95:118:37:
+
+                R(n,i,j) = R(n,i,j)**-1
+                                     1
+Warning: Extension: Unary operator following arithmetic operator (use parentheses) at (1)
+properties_util.f95:112:44:
+
+                            &(C(n,i,0)-C(n,j,0))**2)**0.5
+                                            1
+Warning: Array reference at (1) is out of bounds (0 < 1) in dimension 3
+properties_util.f95:112:35:
+
+                            &(C(n,i,0)-C(n,j,0))**2)**0.5
+                                   1
+Warning: Array reference at (1) is out of bounds (0 < 1) in dimension 3
+properties_util.f95:111:44:
+
+                            &(C(n,i,0)-C(n,j,0))**2+ &
+                                            1
+Warning: Array reference at (1) is out of bounds (0 < 1) in dimension 3
+properties_util.f95:111:35:
+
+                            &(C(n,i,0)-C(n,j,0))**2+ &
+                                   1
+Warning: Array reference at (1) is out of bounds (0 < 1) in dimension 3
+properties_util.f95:110:44:
+
+                 R(n,i,j) = ((C(n,i,0)-C(n,j,0))**2+ &
+                                            1
+Warning: Array reference at (1) is out of bounds (0 < 1) in dimension 3
+properties_util.f95:110:35:
+
+                 R(n,i,j) = ((C(n,i,0)-C(n,j,0))**2+ &
+                                   1
+Warning: Array reference at (1) is out of bounds (0 < 1) in dimension 3
+properties_util.f95:136:58:
+
+     DOUBLE PRECISION,INTENT(in) :: C(1:nconf, 1:nres, 1:3), rc
+                                                          1
+Error: Symbol at (1) is not a DUMMY variable
+properties_util.f95:224:20:
+
+     c = (3.0*Rb*temp)/6.0
+                    1
+Error: Symbol 'temp' at (1) has no IMPLICIT type

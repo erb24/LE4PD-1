@@ -10,11 +10,8 @@ are implemented. Future versions will contain nucleic acids such as RNA and DNA.
 
 class protein(object):
 	"""
-	Attributes:
-	-----------
-	_MD: mdtraj
-		MDtraj generator which processes full topology of given input coordinate
-		files, or full MD simulation files.
+	Input:
+	------
 	fetch: str
 		Fetch will read .pdb files and load the topology into an MDtraj object.
 		If only an ID is given (if there is no .pdb extension), fetch will
@@ -40,6 +37,30 @@ class protein(object):
 				1: '/path/to/topology/1.pdb',
 				 			...
 				N: '/path/to/topology/N.pdb'}
+
+	Attributes:
+	-----------
+	_MD: mdtraj
+		MDtraj generator which processes full topology of given input coordinate
+		files, or full MD simulation files. See MDtraj documentation for full
+		details.
+	xyz: mdtraj
+		Cartesian coordinates of supplied topology or trajectory data. See
+		MDtraj documentation for full details.
+	top: mdtraj
+		Topology information of supplied topology data. Trajectory selection can
+		be used to slice portions of the desired trajectory. See MDtraj
+		documentation for full details.
+	atoms: str
+		List of ordered atoms from topology.
+	n_atoms: int
+		Total number of atoms from topology.
+	residues: str
+		List of ordered residues from topology.
+	n_residues: int
+		Total number of residues from topology.
+	n_conformers: int
+		Total number of conformations from topology.
 
 	"""
 

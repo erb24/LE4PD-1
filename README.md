@@ -1,6 +1,6 @@
 # Langevin Equation for Protein Dynamics
 
-This API provides a Python interface to use the LE4PD fortran codes developed by **Jeremy Copperman**, and **Marina Guenza**. The codes use a coase-grained Langevin formalism to obtain site-specific dynamics of proteins. This formalism takes the structural ensemble available to the protein as input, and generates the relaxation dynamics analytically.
+This API provides a Python interface to use the updated LE4PD fortran codes developed by **Jeremy Copperman**, and **Marina Guenza**. The codes use a coase-grained Langevin formalism to obtain site-specific dynamics of proteins. This formalism takes the structural ensemble available to the protein as input, and generates the relaxation dynamics analytically.
 
 # Installation
     python setup.py install

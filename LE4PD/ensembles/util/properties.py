@@ -2,7 +2,6 @@ import numpy as np
 import mdtraj as md
 import warnings
 from LE4PD.ensembles.util import properties_util as util
-from tqdm import trange
 
 
 def calculate_a_matrix(self):
@@ -379,11 +378,6 @@ def save_modes_pdb(self, max_modes=10):
     if max_modes > self.n_residues-1:
         warnings.warn("""Requested number of copies exceeds the number of available modes""")
         max_modes = self.n_residues-1
-    try:
-        for n in trange(3, max_modes):
-            filename = "mode_"+str(n+1)+".pdb"
-            self._MD.save_pdb(filename, bfactors=mlen_out[n,:])
-    except:
-        for n in range(3, max_modes):
-            filename = "mode_"+str(n+1)+".pdb"
-            self._MD.save_pdb(filename, bfactors=mlen_out[n,:])
+    for n in range(3, max_modes):
+        filename = "mode_"+str(n+1)+".pdb"
+        self._MD.save_pdb(filename, bfactors=mlen_out[n,:])

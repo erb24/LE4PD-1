@@ -12,8 +12,7 @@ setup(
         'numpy',
         'scipy',
         'matplotlib',
-        'mdtraj',
-        'simtk'
+        'mdtraj'
     ],
     zip_safe = False
 )

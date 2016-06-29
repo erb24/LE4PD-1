@@ -73,7 +73,7 @@ def calculate_eigenvalues(self):
 
     # Sort by eigenvalues
     idx = np.argsort(abs(w_lambda))[::-1]
-    w_lambda = np.array(1/(w_lambda[idx].real), dtype=float, order='F')
+    w_lambda = np.array(1 / (w_lambda[idx].real), dtype=float, order='F')
     Q = np.array(Q[:, idx], dtype=float, order='F')
     QI = np.array(np.linalg.inv(Q), dtype=float, order='F')
 
@@ -83,12 +83,13 @@ def calculate_eigenvalues(self):
         io = 1.0
 
     # Calculate mu eigenvalues
-    w_mu = np.zeros(self.n_residues-1, dtype=float, order='F')
+    w_mu = np.zeros(self.n_residues - 1, dtype=float, order='F')
     U = np.array(self.U, dtype=float, order='F')
     util.calculate_nu_eigenvalues(w_mu, QI, U, self.n_residues)
 
     # Calculate nu eigenvalues
-    w_nu = np.array(np.diag(np.dot(QI, np.dot(self.L, Q))), dtype=float, order='F')
+    w_nu = np.array(np.diag(np.dot(QI, np.dot(self.L, Q))),
+                    dtype=float, order='F')
 
     self.lambda_eigenvalues = w_lambda
     self.mu_eigenvalues = w_mu
@@ -171,7 +172,8 @@ def calculate_H(self, fratio):
 def calculate_L_matrix(self):
     self.L = np.dot(self.a, np.dot(self.H, self.a.T))
     self.LI = np.linalg.inv(self.L)
-    self.LU = np.dot(self.U,self.LI)
+    self.LU = np.dot(self.U, self.LI)
+
 
 def calculate_M_matrix(self):
     M = np.zeros((self.n_residues, self.n_residues))
@@ -191,7 +193,7 @@ def calculate_MSA(self):
               "CYS": (140.0 / (4 * np.pi))**0.5,
               "GLN": (189.0 / (4 * np.pi))**0.5,
               "GLU": (183.0 / (4 * np.pi))**0.5,
-              "GLY": ( 85.0 / (4 * np.pi))**0.5,
+              "GLY": (85.0 / (4 * np.pi))**0.5,
               "HIS": (194.0 / (4 * np.pi))**0.5,
               "ILE": (182.0 / (4 * np.pi))**0.5,
               "LEU": (180.0 / (4 * np.pi))**0.5,
@@ -218,10 +220,26 @@ def calculate_MSF(self):
     MSF = np.zeros((self.n_conformers, self.n_residues,
                     self.n_residues), dtype=float, order='F')
     util.calculate_msf(MSF, eigenvectors, eigenvalues, self.temp,
-                                  self.n_conformers, self.n_residues)
+                       self.n_conformers, self.n_residues)
     self.bfactors = np.squeeze(
         [(8 / 3) * (np.pi**2) * cc * np.diag(MSF[n]) * 100 for n in range(self.n_conformers)])
     self.MSF = MSF
+
+
+def calculate_NMR_observables(self):
+    timescale = (len(self.P2_time) - 1) / 1000
+
+    T1 = np.zeros(self.n_residues - 1, dtype=float, order='F')
+    T2 = np.zeros(self.n_residues - 1, dtype=float, order='F')
+    NOE = np.zeros(self.n_residues - 1, dtype=float, order='F')
+
+    P2 = np.array(self.P2, dtype=float, order='F')
+    time = np.array(self.P2_time, dtype=float, order='F')
+    util.calculate_nmr_observables(T1, T2, NOE, P2, time, self._NHfactor, timescale, self.n_residues)
+
+    self.T1 = T1
+    self.T2 = T2
+    self.NOE = NOE
 
 
 def calculate_Q_matrix(self):
@@ -233,17 +251,18 @@ def calculate_Q_matrix(self):
     def eigen_decomposition(self, fratio):
         U = np.array(self.U, dtype=float, order='F')
         H = np.array(calculate_H(self, fratio), dtype=float, order='F')
-        L = np.array(np.dot(self.a, np.dot(H, self.a.T)), dtype=float, order='F')
+        L = np.array(np.dot(self.a, np.dot(H, self.a.T)),
+                     dtype=float, order='F')
         LI = np.array(np.linalg.inv(L), dtype=float, order='F')
-        LU = np.array(np.dot(U,LI), dtype=float, order='F')
+        LU = np.array(np.dot(U, LI), dtype=float, order='F')
 
         # Calculate lambda eigenvalues and Q-matrix
         w_lambda, Q = np.linalg.eig(LU)
 
         # Sort by eigenvalues
         idx = np.argsort(abs(w_lambda))[::-1]
-        w_lambda = np.array(1/(w_lambda[idx].real), dtype=float, order='F')
-        Q = np.array(Q[:,idx], dtype=float, order='F')
+        w_lambda = np.array(1 / (w_lambda[idx].real), dtype=float, order='F')
+        Q = np.array(Q[:, idx], dtype=float, order='F')
         QI = np.array(np.linalg.inv(Q), dtype=float, order='F')
 
         if w_lambda.min() < 0:
@@ -252,11 +271,12 @@ def calculate_Q_matrix(self):
             io = 1.0
 
         # Calculate mu eigenvalues
-        w_mu = np.zeros(self.n_residues-1, dtype=float, order='F')
+        w_mu = np.zeros(self.n_residues - 1, dtype=float, order='F')
         util.calculate_nu_eigenvalues(w_mu, QI, U, self.n_residues)
 
         # Calculate nu eigenvalues
-        w_nu = np.array(np.diag(np.dot(QI, np.dot(L, Q))), dtype=float, order='F')
+        w_nu = np.array(np.diag(np.dot(QI, np.dot(L, Q))),
+                        dtype=float, order='F')
 
         return Q, QI, w_lambda, w_mu, w_nu, io
 
@@ -272,6 +292,7 @@ def calculate_Q_matrix(self):
     self.Q = Q
     self.QI = QI
 
+
 def calculate_P2(self, order=4):
     # Prepare bond matrix in NH basis as f2py input
     NH = np.array(self._NH_matrix.mean(axis=0), dtype=float, order='F')
@@ -285,21 +306,23 @@ def calculate_P2(self, order=4):
     w_mu = np.array(self.mu_eigenvalues, dtype=float, order='F')
 
     # Prepare barriers as f2py input
-    barriers = np.zeros(self.n_residues-1, dtype=float, order='F')
+    barriers = np.zeros(self.n_residues - 1, dtype=float, order='F')
 
     # Prepare mode lengthscale as f2py input
-    modelength = np.zeros((self.n_residues-1, self.n_residues-1), dtype=float, order='F')
+    modelength = np.zeros(
+        (self.n_residues - 1, self.n_residues - 1), dtype=float, order='F')
 
     # Prepare time parameters as f2py input
-    tau = np.zeros(self.n_residues-1, dtype=float, order='F')
-    taum = np.zeros(self.n_residues-1, dtype=float, order='F')
-    time = np.zeros(1000*order+1, dtype=float, order='F')
+    tau = np.zeros(self.n_residues - 1, dtype=float, order='F')
+    taum = np.zeros(self.n_residues - 1, dtype=float, order='F')
+    time = np.zeros(1000 * order + 1, dtype=float, order='F')
 
     # Prepare P2 correlation function as f2py input
-    P2 = np.zeros((1000*order+1, self.n_residues-1), dtype=float, order='F')
+    P2 = np.zeros((1000 * order + 1, self.n_residues - 1),
+                  dtype=float, order='F')
 
     util.calculate_p2(P2, time, tau, taum, barriers, modelength, w_lambda, Q, QI,
-                        NH, self._blsq, w_mu, self.sigma, self.temp, self.n_residues, order)
+                      NH, self._blsq, w_mu, self.sigma, self.temp, self.n_residues, order)
 
     self.lambda_eigenvalues = w_lambda
     self.mu_eigenvalues = w_mu
@@ -309,6 +332,7 @@ def calculate_P2(self, order=4):
     self.tau_m1 = taum
     self.P2_time = time
     self.P2 = P2
+
 
 def calculate_R_matrix(self):
     # Slice alpha carbons from trajectory
@@ -325,7 +349,7 @@ def calculate_R_matrix(self):
 def calculate_SASA(self, probe_radius=0.14, n_sphere_points=960):
     sasa = md.shrake_rupley(self._MD, mode='residue',
                             probe_radius=probe_radius, n_sphere_points=n_sphere_points)
-    self.sasa = (sasa*100 / (4*np.pi))**0.5
+    self.sasa = (sasa * 100 / (4 * np.pi))**0.5
 
 
 def calculate_sigma(self):
@@ -342,7 +366,7 @@ def calculate_U_matrix(self):
     if not hasattr(self, 'MSF'):
         calculate_MSF(self)
     util.calculate_u_matrix(U, np.array(self._bonds * 10, dtype=float, order='F'),
-                                       np.array(
+                            np.array(
         self.MSF, dtype=float, order='F'),
         self.temp, self.n_conformers, self.n_residues)
     """NOTE: The fortran code actually returns the inverse U matrix. This is
@@ -360,24 +384,29 @@ def calculate_U_matrix(self):
                         self._average_bond_length[j] * 100)
     self.U = U
 
+
 def save_modes_pdb(self, max_modes=10):
-	# Create atomic count array, with the number of Atoms Per Residue (apr)
-    apr = np.squeeze([len(self.top.select('resid '+str(i))) for i in range(self.n_residues)])
+        # Create atomic count array, with the number of Atoms Per Residue (apr)
+    apr = np.squeeze([len(self.top.select('resid ' + str(i)))
+                      for i in range(self.n_residues)])
     apr = np.array(apr, dtype=int, order='F')
 
     # Prepare input mode length as fortran contiguous array
     mlen_in = np.array(self.mode_length, dtype=float, order='F')
 
     # Create output array as mode length per atomic site
-    mlen_out = np.zeros((self.n_residues-1,self.n_atoms), dtype=float, order='F')
+    mlen_out = np.zeros((self.n_residues - 1, self.n_atoms),
+                        dtype=float, order='F')
 
     # Calculate output mode length
-    util.calculate_mode_length_array(mlen_out, mlen_in, apr, self.n_atoms, self.n_residues)
+    util.calculate_mode_length_array(
+        mlen_out, mlen_in, apr, self.n_atoms, self.n_residues)
 
     # Save atomic coordinates to pdb files with mode length as bfactor
-    if max_modes > self.n_residues-1:
-        warnings.warn("""Requested number of copies exceeds the number of available modes""")
-        max_modes = self.n_residues-1
+    if max_modes > self.n_residues - 1:
+        warnings.warn(
+            """Requested number of copies exceeds the number of available modes""")
+        max_modes = self.n_residues - 1
     for n in range(3, max_modes):
-        filename = "mode_"+str(n+1)+".pdb"
-        self._MD.save_pdb(filename, bfactors=mlen_out[n,:])
+        filename = "mode_" + str(n + 1) + ".pdb"
+        self._MD.save_pdb(filename, bfactors=mlen_out[n, :])

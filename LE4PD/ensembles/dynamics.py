@@ -20,12 +20,13 @@ class dynamics(object):
     """
 
     def __init__(self, molecule, temp=298, fD2O=0.0, int_visc=2.71828,
-                 mass_factor=1.0, n_iter=200):
+                 mass_factor=1.0, NHfactor=1.0, n_iter=200):
 
         self.temp = temp
         self._fD2O = fD2O
         self._fH2O = 1.0 - self._fD2O
         self._internal_viscosity = int_visc
+        self._NHfactor = NHfactor
         self._n_iter = n_iter
 
         # Import molecule class attributes
@@ -61,6 +62,9 @@ class dynamics(object):
 
     def save_modes_pdb(self, max_modes=10):
         properties.save_modes_pdb(self, max_modes=max_modes)
+
+    def calculate_NMR_observables(self):
+        properties.calculate_NMR_observables(self)
 
     def calculate_rmsd(self, reference=0, atom_indices=None, precentered=False):
         rmsd = md.rmsd(self._MD, self._MD, reference,

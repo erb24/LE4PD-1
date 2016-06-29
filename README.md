@@ -3,8 +3,8 @@
 This API provides a Python interface to use the updated LE4PD fortran codes developed by **Jeremy Copperman**, and **Marina Guenza**. The codes use a coase-grained Langevin formalism to obtain site-specific dynamics of proteins. This formalism takes the structural ensemble available to the protein as input, and generates the relaxation dynamics analytically.
 
 # Installation
-    python setup.py install
-
+    pip install -e .
+    
 # References
 * **J. Copperman** and **M. G. Guenza** *“Mode Localization in the Cooperative Dynamics of Protein Recognition”* Biophysical Journal (2015) (submitted) arXiv:1509.08913.
 * **J. Copperman** and **M. G. Guenza** *“Predicting protein dynamics from structural ensembles” Journal of Chemical Physics, Invited Contribution for Special Topics Issue on Coarse Graining of Macromolecules, Biopolymers, and Membranes”* 143, 243131-12 (2015) doi: 10.1063/1.4935575.

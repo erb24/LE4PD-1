@@ -171,36 +171,6 @@
     END
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! CALCULATE LU AND LI MATRICES
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-    SUBROUTINE CALCULATE_LU_MATRIX(LI, LU, L, U, nres)
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! VARIABLES
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-    IMPLICIT NONE
-    INTEGER(kind=8),INTENT(in) :: nres
-    DOUBLE PRECISION, INTENT(in) :: U(1:nres-1,1:nres-1), L(1:nres-1,1:nres-1)
-    DOUBLE PRECISION, INTENT(inout) :: LI(1:nres-1,1:nres-1)
-    DOUBLE PRECISION, INTENT(inout) :: LU(1:nres-1,1:nres-1)
-
-    INTEGER(kind=8) :: io, ipiv(1:nres)
-    DOUBLE PRECISION :: work(1:(nres-1)*(nres-1))
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! CALCULATE
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-! LU Factorization and then Calculate L-Matrix Inverse (DO NOT CONFUSE WITH LU MATRIX!!!)
-    LI = L
-    CALL DGETRF(nres-1, nres-1, LI, nres-1, ipiv, io)
-    CALL DGETRI(nres-1, LI, nres-1, ipiv, work, (nres-1)*(nres-1), io)
-    LU = MATMUL(U,LI)
-    END
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! CALCULATE ATOMIC MODE LENGTH ARRAY
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -344,6 +314,151 @@
     END DO
     END
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CALCULATE T1, T2, & NOE
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    SUBROUTINE CALCULATE_NMR_OBSERVABLES(T1,T2,NOE,P2,time_in,NHfactor,timescale,nres)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! VARIABLES
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    IMPLICIT NONE
+    INTEGER(kind=8),INTENT(in) :: nres, timescale
+    DOUBLE PRECISION,INTENT(in) :: NHfactor
+    DOUBLE PRECISION,INTENT(in) :: P2(0:1000*timescale,1:nres-1)
+    DOUBLE PRECISION,INTENT(in) :: time_in(0:1000*timescale)
+    DOUBLE PRECISION,INTENT(inout) :: T1(1:nres-1), T2(1:nres-1), NOE(1:nres-1)
+
+    INTEGER(kind=8) :: n,t
+    DOUBLE PRECISION :: c2, di, d2, rnhin3, w0, w1, w2, w3, w4
+    DOUBLE PRECISION :: uo, hp, wh, wn, gh, gn, dn, pi
+    DOUBLE PRECISION :: time(0:1000*timescale), dt(1:1000*timescale)
+	DOUBLE PRECISION :: fj0(1:nres-1), fint0(0:1000*timescale,1:nres-1)
+	DOUBLE PRECISION :: fints0(0:1000*timescale,1:nres-1)
+	DOUBLE PRECISION :: fj1(1:nres-1), fint1(0:1000*timescale,1:nres-1)
+	DOUBLE PRECISION :: fints1(0:1000*timescale,1:nres-1)
+	DOUBLE PRECISION :: fj2(1:nres-1), fint2(0:1000*timescale,1:nres-1)
+	DOUBLE PRECISION :: fints2(0:1000*timescale,1:nres-1)
+    DOUBLE PRECISION :: fj3(1:nres-1), fint3(0:1000*timescale,1:nres-1)
+	DOUBLE PRECISION :: fints3(0:1000*timescale,1:nres-1)
+	DOUBLE PRECISION :: fj4(1:nres-1), fint4(0:1000*timescale,1:nres-1)
+    DOUBLE PRECISION :: fints4(0:1000*timescale,1:nres-1)
+
+! ORIGINAL COMMENT (???):
+!   All the parameters below (save for pi) should be changeable. How could we do that?
+! UPDATE (pgromano):
+!   Super easy to set this up with F2PY... but what are these values?
+!   I will eventually come back and rewrite everything with more intuitive names
+!   or at the very least add comments to describe what is being done.
+
+    uo = 1.256637D-06
+	hp = 6.62608D-34
+	wh = 599.98D+06
+	wn = 60.8D+06
+	gh = 26.7519D+07
+	gn = -2.7126D+07
+	dn = 160D-06
+	pi = 3.141592654d0
+    rnhin3 = 9.90688385D+29
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CALCULATE
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+! Convert time into picoseconds
+    rnhin3=rnhin3*NHfactor
+    DO t=0,1000*timescale
+        time(t) = time_in(t)*1D-12
+        IF(t.gt.0)THEN
+            dt(t) = time(t)-time(t-1)
+        END IF
+    END DO
+
+    w0 = 0.d0
+    w1 = wn
+    w2 = wh
+    w3 = wh+wn
+    w4 = wh-wn
+
+    DO n=1,nres-1
+        fint0(0,n) = 1.d0
+        fints0(0,n) = 0.d0
+        fj0(n) = 0.d0
+        DO t=1,1000*timescale
+            fint0(t,n) = P2(t,n)*DCOS(w0*time(t)*2*pi)
+            fints0(t,n) = fints0(t-1,n) + &
+                        & 0.5*dt(t)*(fint0(t,n)+fint0(t-1,n))
+        END DO
+        fj0(n) = 0.4*fints0(1000*timescale,n)
+    END DO
+
+    DO n=1,nres-1
+        fint1(0,n) = 1.d0
+        fints1(0,n) = 0.d0
+        fj1(n) = 0.d0
+        DO t=1,1000*timescale
+            fint1(t,n) = P2(t,n)*DCOS(w1*time(t)*2*pi)
+            fints1(t,n) = fints1(t-1,n) + &
+                        & 0.5*dt(t)*(fint1(t,n)+fint1(t-1,n))
+        END DO
+        fj1(n) = 0.4*fints1(1000*timescale,n)
+    END DO
+
+    DO n=1,nres-1
+        fint2(0,n) = 1.d0
+        fints2(0,n) = 0.d0
+        fj2(n) = 0.d0
+        DO t=1,1000*timescale
+            fint2(t,n) = P2(t,n)*DCOS(w2*time(t)*2*pi)
+            fints2(t,n) = fints2(t-1,n) + &
+                        & 0.5*dt(t)*(fint2(t,n)+fint2(t-1,n))
+        END DO
+        fj2(n) = 0.4*fints2(1000*timescale,n)
+    END DO
+
+    DO n=1,nres-1
+        fint3(0,n) = 1.d0
+        fints3(0,n) = 0.d0
+        fj3(n) = 0.d0
+        DO t=1,1000*timescale
+            fint3(t,n) = P2(t,n)*DCOS(w3*time(t)*2*pi)
+            fints3(t,n) = fints3(t-1,n) + &
+                        & 0.5*dt(t)*(fint3(t,n)+fint3(t-1,n))
+        END DO
+        fj3(n) = 0.4*fints3(1000*timescale,n)
+    END DO
+
+    DO n=1,nres-1
+        fint4(0,n) = 1.d0
+        fints4(0,n) = 0.d0
+        fj4(n) = 0.d0
+        DO t=1,1000*timescale
+            fint4(t,n) = P2(t,n)*DCOS(w4*time(t)*2*pi)
+            fints4(t,n) = fints4(t-1,n) + &
+                        & 0.5*dt(t)*(fint4(t,n)+fint4(t-1,n))
+        END DO
+        fj4(n) = 0.4*fints4(1000*timescale,n)
+    END DO
+
+    di = uo*uo*hp*hp*gh*gh*gn*gn                ! (uo*hp*gh*gn)**2
+	d2 = di*rnhin3*rnhin3/(64*pi*pi*pi*pi)      ! (di*(rnhin3**2))/(8*(pi**2))**2
+	c2 = 4*pi*pi*wn*wn*dn*dn/3                  ! ((2*pi*wn*dn)**2)/3
+
+    DO n=1,nres-1
+        ! Calculate T1 per residue
+        T1(n) = (c2*fj1(n)+0.25*d2*(3*fj1(n)+6*fj3(n)+fj4(n)))**(-1)
+
+        ! Calculate T2 per residue
+        T2(n) = ((c2*(4*fj0(n)+3*fj1(n))/6) + &
+                & d2*(4*fj0(n)+3*fj1(n)+6*fj2(n)+6*fj3(n)+fj4(n))/8)**(-1)
+
+        ! Calculate NOE per residue
+        NOE(n) = 1.d0+0.25*d2*(gh/gn)*(6*fj3(n)-fj4(n))*T1(n)
+    END DO
+    END
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! CALCULATE Q MATRIX
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -397,8 +512,11 @@
     DOUBLE PRECISION, INTENT(in) :: NH(1:nres-1, 1:nres-1)
     DOUBLE PRECISION, INTENT(in) :: Q(1:nres-1,1:nres-1), QI(1:nres-1,1:nres-1)
     DOUBLE PRECISION, INTENT(inout) :: tau(1:nres-1), tau_m1(1:nres-1)
-    DOUBLE PRECISION, INTENT(inout) :: barriers(1:nres-1), modelength(1:nres-1,1:nres-1)
-    DOUBLE PRECISION, INTENT(inout) :: lam(1:nres-1), P2(1:1000*timescale+1,1:nres-1), time(1:1000*timescale+1)
+    DOUBLE PRECISION, INTENT(inout) :: barriers(1:nres-1)
+    DOUBLE PRECISION, INTENT(inout) :: modelength(1:nres-1,1:nres-1)
+    DOUBLE PRECISION, INTENT(inout) :: lam(1:nres-1)
+    DOUBLE PRECISION, INTENT(inout) :: time(1:1000*timescale+1)
+    DOUBLE PRECISION, INTENT(inout) :: P2(1:1000*timescale+1,1:nres-1)
 
     INTEGER(kind=8) :: i, j, k, n, t, io, index, ipiv(1:nres), t_final, ti, tf, dt
     DOUBLE PRECISION :: AMPsum(1000*timescale+1,1:nres), modeAmp(1:nres-1,1:nres-1)
@@ -616,26 +734,6 @@
         END DO
     END DO
     END
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! CALCULATE T1, T2, & NOE
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-    SUBROUTINE CALCULATE_NMR_OBSERVABLES(T1, T2, NOE, nconf, nres)
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! VARIABLES
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-    IMPLICIT NONE
-    INTEGER(kind=8),INTENT(in) :: nconf, nres
-    DOUBLE PRECISION,INTENT(inout) :: R(1:nconf, 1:nres, 1:nres)
-
-    INTEGER(kind=8) :: i,j,n
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! CALCULATE
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! CALCULATE U MATRIX

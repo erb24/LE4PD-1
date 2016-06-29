@@ -4,8 +4,9 @@ This API provides a Python interface to use the updated LE4PD fortran codes deve
 
 # Installation
     pip install -e .
-    
+
 # References
 * **J. Copperman** and **M. G. Guenza** *“Mode Localization in the Cooperative Dynamics of Protein Recognition”* Biophysical Journal (2015) (submitted) arXiv:1509.08913.
 * **J. Copperman** and **M. G. Guenza** *“Predicting protein dynamics from structural ensembles” Journal of Chemical Physics, Invited Contribution for Special Topics Issue on Coarse Graining of Macromolecules, Biopolymers, and Membranes”* 143, 243131-12 (2015) doi: 10.1063/1.4935575.
 * **J. Copperman**, **M. G. Guenza** *“A Coarse-Grained Langevin Equation for Protein Dynamics: Global anisotropy and a mode approach to local complexity”* J. Phys. Chem. B, Festschrift issue honoring Branka Ladanyi, 119,  9195 (2015). DOI:10.1021/jp509473z.
+* **E. Caballero-Manrique**, **M. G. Guenza** *“A Langevin Equation Approach to Bridge Different Timescales of Relaxation in Protein Dynamics”* 51st Annual Meeting of the Biophysical Society, MAR 03-07, 2007. Biophysical Journal 377A (2007).

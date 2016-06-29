@@ -7,9 +7,9 @@ from LE4PD.ensembles.util import properties_util as util
 def calculate_a_matrix(self):
     a = np.zeros((self.n_residues - 1, self.n_residues),
                  dtype=float, order='F')
-    M = np.array(self.M, dtype=float, order='F')
+    M = np.array(self._M, dtype=float, order='F')
     util.calculate_a_matrix(a, M, self.n_residues)
-    self.a = a
+    self._a = a
 
 
 def calculate_bfactors(self):
@@ -69,7 +69,7 @@ def calculate_bond_vectors(self):
 
 def calculate_eigenvalues(self):
     # Calculate lambda eigenvalues and Q-matrix
-    w_lambda, Q = np.linalg.eig(self.LU)
+    w_lambda, Q = np.linalg.eig(self._LU)
 
     # Sort by eigenvalues
     idx = np.argsort(abs(w_lambda))[::-1]
@@ -84,11 +84,11 @@ def calculate_eigenvalues(self):
 
     # Calculate mu eigenvalues
     w_mu = np.zeros(self.n_residues - 1, dtype=float, order='F')
-    U = np.array(self.U, dtype=float, order='F')
+    U = np.array(self._U, dtype=float, order='F')
     util.calculate_nu_eigenvalues(w_mu, QI, U, self.n_residues)
 
     # Calculate nu eigenvalues
-    w_nu = np.array(np.diag(np.dot(QI, np.dot(self.L, Q))),
+    w_nu = np.array(np.diag(np.dot(QI, np.dot(self._L, Q))),
                     dtype=float, order='F')
 
     self.lambda_eigenvalues = w_lambda
@@ -147,7 +147,7 @@ def calculate_gamma_contacts(self):
     eigenvectors = np.zeros(
         (self.n_conformers, self.n_residues, self.n_residues), dtype=float, order='F')
     util.calculate_contacts(contacts, eigenvalues, eigenvectors, np.array(
-        self.R, order='F'), self.n_conformers, self.n_residues)
+        self._R, order='F'), self.n_conformers, self.n_residues)
 
     self._gamma_contacts = contacts
     self._gamma_eigenvalues = eigenvalues
@@ -156,23 +156,23 @@ def calculate_gamma_contacts(self):
 
 def calculate_H_matrix(self):
     H = np.zeros((self.n_residues, self.n_residues), dtype=float, order='F')
-    R = np.array(self.R.mean(axis=0), dtype=float, order='F')
+    R = np.array(self._R.mean(axis=0), dtype=float, order='F')
     fratio = self.fw.mean() / self.fp.mean()
     util.calculate_h_matrix(H, R, self.fp, fratio, self.n_residues)
-    self.H = H
+    self._H = H
 
 
 def calculate_H(self, fratio):
     H = np.zeros((self.n_residues, self.n_residues), dtype=float, order='F')
-    R = np.array(self.R.mean(axis=0), dtype=float, order='F')
+    R = np.array(self._R.mean(axis=0), dtype=float, order='F')
     util.calculate_h_matrix(H, R, self.fp, fratio, self.n_residues)
     return H
 
 
 def calculate_L_matrix(self):
-    self.L = np.dot(self.a, np.dot(self.H, self.a.T))
-    self.LI = np.linalg.inv(self.L)
-    self.LU = np.dot(self.U, self.LI)
+    self._L = np.dot(self._a, np.dot(self._H, self._a.T))
+    self._LI = np.linalg.inv(self._L)
+    self._LU = np.dot(self._U, self._LI)
 
 
 def calculate_M_matrix(self):
@@ -182,7 +182,7 @@ def calculate_M_matrix(self):
     for i in range(self.n_residues - 1):
         M[i + 1, i] = -1.0
     M[0, :] = 1.0 / self.n_residues
-    self.M = M
+    self._M = M
 
 
 def calculate_MSA(self):
@@ -227,14 +227,14 @@ def calculate_MSF(self):
 
 
 def calculate_NMR_observables(self):
-    timescale = (len(self.P2_time) - 1) / 1000
+    timescale = (len(self.time) - 1) / 1000
 
     T1 = np.zeros(self.n_residues - 1, dtype=float, order='F')
     T2 = np.zeros(self.n_residues - 1, dtype=float, order='F')
     NOE = np.zeros(self.n_residues - 1, dtype=float, order='F')
 
     P2 = np.array(self.P2, dtype=float, order='F')
-    time = np.array(self.P2_time, dtype=float, order='F')
+    time = np.array(self.time, dtype=float, order='F')
     util.calculate_nmr_observables(T1, T2, NOE, P2, time, self._NHfactor, timescale, self.n_residues)
 
     self.T1 = T1
@@ -249,9 +249,9 @@ def calculate_Q_matrix(self):
     """
 
     def eigen_decomposition(self, fratio):
-        U = np.array(self.U, dtype=float, order='F')
+        U = np.array(self._U, dtype=float, order='F')
         H = np.array(calculate_H(self, fratio), dtype=float, order='F')
-        L = np.array(np.dot(self.a, np.dot(H, self.a.T)),
+        L = np.array(np.dot(self._a, np.dot(H, self._a.T)),
                      dtype=float, order='F')
         LI = np.array(np.linalg.inv(L), dtype=float, order='F')
         LU = np.array(np.dot(U, LI), dtype=float, order='F')
@@ -289,8 +289,8 @@ def calculate_Q_matrix(self):
         fratio -= 0.0015
     fratio = self.fw.mean() / self.fp.mean()
     Q, QI, w_lambda, w_mu, w_nu, io = eigen_decomposition(self, fratio)
-    self.Q = Q
-    self.QI = QI
+    self._Q = Q
+    self._QI = QI
 
 
 def calculate_P2(self, order=4):
@@ -298,8 +298,8 @@ def calculate_P2(self, order=4):
     NH = np.array(self._NH_matrix.mean(axis=0), dtype=float, order='F')
 
     # Prepare Q matrices as f2py input
-    Q = np.array(self.Q, dtype=float, order='F')
-    QI = np.array(self.QI, dtype=float, order='F')
+    Q = np.array(self._Q, dtype=float, order='F')
+    QI = np.array(self._QI, dtype=float, order='F')
 
     # Prepare eigenvalues as f2py input
     w_lambda = np.array(self.lambda_eigenvalues, dtype=float, order='F')
@@ -330,7 +330,7 @@ def calculate_P2(self, order=4):
     self.mode_length = modelength.T
     self.tau = tau
     self.tau_m1 = taum
-    self.P2_time = time
+    self.time = time
     self.P2 = P2
 
 
@@ -343,7 +343,7 @@ def calculate_R_matrix(self):
                   self.n_residues), dtype=float, order='F')
     util.calculate_r_matrix(
         R, C, self.n_conformers, self.n_residues)
-    self.R = R
+    self._R = R
 
 
 def calculate_SASA(self, probe_radius=0.14, n_sphere_points=960):
@@ -370,7 +370,7 @@ def calculate_U_matrix(self):
         self.MSF, dtype=float, order='F'),
         self.temp, self.n_conformers, self.n_residues)
     """NOTE: The fortran code actually returns the inverse U matrix. This is
-	necessary for the LUI codes. For this reason, self.U is the TRUE matrix and
+	necessary for the LUI codes. For this reason, self._U is the TRUE matrix and
 	self._U is the inverse matrix."""
     self._U = U         # INVERSE U MATRIX
 
@@ -382,7 +382,7 @@ def calculate_U_matrix(self):
         for j in range(self.n_residues - 1):
             U[i, j] /= (self._average_bond_length[i] *
                         self._average_bond_length[j] * 100)
-    self.U = U
+    self._U = U
 
 
 def save_modes_pdb(self, max_modes=10):

@@ -1,7 +1,7 @@
 import numpy as np
 import mdtraj as md
 import warnings
-from LE4PD.ensembles.util import properties_util as util
+from LE4PD.ensemble.util import properties_util as util
 
 
 def calculate_a_matrix(self):
@@ -10,6 +10,14 @@ def calculate_a_matrix(self):
     M = np.array(self._M, dtype=float, order='F')
     util.calculate_a_matrix(a, M, self.n_residues)
     self._a = a
+
+
+def calculate_aspherocity(self):
+    aspherocity = np.zeros(self.n_conformers)
+    for n in range(self.n_conformers):
+        aspherocity[n] = self._gamma_eigenvalues[n, 0] - 0.5 * \
+            (self._gamma_eigenvalues[n, 1] + self._gamma_eigenvalues[n, 2])
+    self._aspherocity = aspherocity
 
 
 def calculate_bfactors(self):
@@ -65,6 +73,14 @@ def calculate_bond_vectors(self):
     self._bonds = C_bond
     self._bond_length = C_length
     self._average_bond_length = C_length.mean(axis=0)
+
+
+def calculate_CA_COM(self):
+    C = self._MD.atom_slice(self._MD.top.select('name == CA'))
+    C = np.array(C.xyz, dtype=float, order='F')
+    com = np.zeros((self.n_conformers, 3), dtype=float, order='F')
+    util.calculate_ca_com(com, C, self.n_conformers, self.n_residues)
+    self.com = com
 
 
 def calculate_eigenvalues(self):
@@ -235,7 +251,8 @@ def calculate_NMR_observables(self):
 
     P2 = np.array(self.P2, dtype=float, order='F')
     time = np.array(self.time, dtype=float, order='F')
-    util.calculate_nmr_observables(T1, T2, NOE, P2, time, self._NHfactor, timescale, self.n_residues)
+    util.calculate_nmr_observables(
+        T1, T2, NOE, P2, time, self._NHfactor, timescale, self.n_residues)
 
     self.T1 = T1
     self.T2 = T2
@@ -346,6 +363,12 @@ def calculate_R_matrix(self):
     self._R = R
 
 
+def calculate_rmsd(self, reference=0, atom_indices=None, precentered=False):
+    rmsd = md.rmsd(self._MD, self._MD, reference,
+                   atom_indices=atom_indices, precentered=precentered)
+    self.rmsd = rmsd
+
+
 def calculate_SASA(self, probe_radius=0.14, n_sphere_points=960):
     sasa = md.shrake_rupley(self._MD, mode='residue',
                             probe_radius=probe_radius, n_sphere_points=n_sphere_points)
@@ -385,7 +408,7 @@ def calculate_U_matrix(self):
     self._U = U
 
 
-def save_modes_pdb(self, max_modes=10):
+def save_modes_pdb(self, max_modes=7):
         # Create atomic count array, with the number of Atoms Per Residue (apr)
     apr = np.squeeze([len(self.top.select('resid ' + str(i)))
                       for i in range(self.n_residues)])
@@ -407,6 +430,6 @@ def save_modes_pdb(self, max_modes=10):
         warnings.warn(
             """Requested number of copies exceeds the number of available modes""")
         max_modes = self.n_residues - 1
-    for n in range(3, max_modes):
+    for n in range(3, 3 + max_modes):
         filename = "mode_" + str(n + 1) + ".pdb"
         self._MD.save_pdb(filename, bfactors=mlen_out[n, :])

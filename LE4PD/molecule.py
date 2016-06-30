@@ -1,8 +1,9 @@
+import os.path
+from warnings import warn
 from urllib.request import urlretrieve
 import numpy as np
 import mdtraj as md
-import os.path
-from warnings import warn
+from LE4PD.util import properties
 
 """Module to manage topology of varying molecule types. Currently only proteins
 are implemented. Future versions will contain nucleic acids such as RNA and DNA.
@@ -24,19 +25,33 @@ class protein(object):
 
 		traj = {0: '/path/to/trajectory/0.xtc',
 				1: '/path/to/trajectory/1.xtc',
-				 			...
+							 ...
 				N: '/path/to/trajectory/N.xtc'}
 
 	 top: dict
-	 	Top is a dictionary in the same formatting as traj, which stores the
+		Top is a dictionary in the same formatting as traj, which stores the
 		local directories of multiple topology files. Note that top is only
 		necessary if the trajectory file format does not store topology
 		information.
 
 		top =  {0: '/path/to/topology/0.pdb',
 				1: '/path/to/topology/1.pdb',
-				 			...
+							 ...
 				N: '/path/to/topology/N.pdb'}
+	skip_atoms: list
+		Skip_atoms is a list of strings that identifies any atom types that
+		should be excluded from the analysis. This is ultimately to ignore
+		non-standard atom types such as metals, halogens, etc. that are not
+		recognized by MDtraj. Note: "CA", "N", nor "H" can be skipped as these
+		are coarse-graining sites.
+	skip_residues: list
+		Skip_residues is a list of strings that identifies any residues types
+		that should be excluded from the analysis. This is ultimately to ignore
+		non-standard residue types such as ligands, amino acid derivatives, etc.
+		that are not recognized by MDtraj. Note: If a residue is an amino acid
+		without non-standard atom types, relabel the residue to their
+		corresponding amino acid and use skip_atoms to remove any atoms not
+		recognized by MDtraj.
 
 	Attributes:
 	-----------
@@ -64,26 +79,27 @@ class protein(object):
 
 	"""
 
-	def __init__(self, fetch=None, traj=None, top=None):
+	def __init__(self, fetch=None, traj=None, top=None, skip_atoms=None, skip_residues=None):
 		if fetch != None and traj != None:
-			warn("""\n
-			Please select between building an ensemble from multiple coordinate files, or generating from MD simulations. LE4PD does not support building ensembles from both methods.
+			warn("""Please select between building an ensemble from multiple coordinate files, or generating from MD simulations. LE4PD does not support building ensembles from both methods.
 			""")
 
+		# Load structure from PDB file or RCSB Protein Data Bank
 		if fetch is not None:
 			if fetch.endswith(".pdb"):
-				# Load structure and remove any solvent
-				self._MD = md.load(fetch).remove_solvent()
+				fetch = fetch[:len(fetch)-4]
+			# Check if topology file already present in working directory
 			else:
-				# Check if topology file already present in working directory
-				if not os.path.isfile(fetch + ".pdb"):
+				try:
 					# Fetch from RCSB
 					print("Fetching structure from RCSB")
 					url = 'http://www.rcsb.org/pdb/files/%s.pdb' % fetch
 					urlretrieve(url, fetch + ".pdb")
+				except:
+					pass
 
-				# Load structure and remove any solvent
-				self._MD = md.load(fetch + ".pdb").remove_solvent()
+			# Load structure and remove any solvent
+			self._MD = md.load(fetch + ".pdb").remove_solvent()
 
 			# Check that Hydrogens are in structure
 			if len(self._MD.top.select("name == H")) == 0:
@@ -97,19 +113,33 @@ class protein(object):
 				PDBFile.writeFile(modeller.topology, modeller.positions, open(fetch + ".pdb", 'w'))
 				self._MD = md.load(fetch + ".pdb").remove_solvent()
 
-			self.n_conformers = self._MD.xyz.shape[0]
-			if self.n_conformers == 1:
-				warn(""" \n
-				PDB file contains only one conformation. For accurate results, it is recommended to supply conformation data from NMR or CryoEM structures. Proceed with caution.
+			if self._MD.xyz.shape[0] == 1:
+				warn("""PDB file contains only one conformation. For accurate results, it is recommended to supply conformation data from NMR or CryoEM structures. Proceed with caution.
 				""")
-			self._method = "ensemble"
 
+		# Load structure from trajectory files
 		if traj is not None:
 			if top is None:
-				self._MD = md.load(traj)
+				self._MD = md.load(traj).remove_solvent()
 			else:
-				self._MD = md.load(traj, top=top)
-			self._method = "trajectory"
+				self._MD = md.load(traj, top=top).remove_solvent()
+
+		# Remove any selected atoms
+		if skip_atoms is not None:
+			for atom in skip_atoms:
+				if atom == "CA" or atom == "N" or atom == "H":
+					warn("""Cannot skip atoms from the peptide backbone as these are coarse-graining sites. These atom types will be ignored.
+					""")
+					pass
+				else:
+					selection_criteria = "name != %s" % atom
+					self._MD = self._MD.atom_slice(self._MD.top.select(selection_criteria))
+
+		# Remove any select residues
+		if skip_residues is not None:
+			for residue in skip_residues:
+				selection_criteria = "resname != %s" % residue
+				self._MD = self._MD.atom_slice(self._MD.top.select(selection_criteria))
 
 		self.top = self._MD.top
 		self.xyz = self._MD.xyz
@@ -119,15 +149,20 @@ class protein(object):
 		self.residues = np.squeeze([str(residue)[:3]
 									for residue in self.top.residues])
 		self.n_residues = len(self.residues)
+		self.n_conformers = self._MD.xyz.shape[0]
 
 	def predict(self, temp=298, fD2O=0.0, int_visc=2.71828):
-		if self._method == 'ensemble':
-			from LE4PD.ensembles.dynamics import dynamics
-		elif self._method == 'trajectory':
-			from LE4PD.trajectories.dynamics import dynamics
+		from LE4PD.dynamics import dynamics
 		self.dynamics = dynamics(self)
 		self.dynamics.predict
 
 	def calculate_rmsd(self, reference=0, atom_indices=None, precentered=False):
-		rmsd = md.rmsd(self._MD, self._MD, reference,atom_indices=atom_indices, precentered=precentered)
-		self.rmsd = rmsd
+		properties.calculate_rmsd(self, reference=reference,atom_indices=atom_indices, precentered=precentered)
+
+	def calculate_COM(self, method="CA"):
+		if method == "CA":
+			properties.calculate_CA_COM(self)
+		elif method == "All":
+			print("Developer is lazy! This feature has not been added.")
+		else:
+			print("Developer is lazy! This feature has not been added.")

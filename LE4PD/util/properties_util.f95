@@ -1,3 +1,8 @@
+! Original FORTRAN codes by Jeremy Copperman & Marina Guenza
+! Author: Pablo Romano
+! Github: @pgromano
+! Last Modified: 06/29/2016
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! CALCULATE a MATRIX
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -62,6 +67,40 @@
             bond(n,i,3) = C(n,i+1,3)-C(n,i,3)
             length(n,i) = (bond(n,i,1)**2+bond(n,i,2)**2+bond(n,i,3)**2)**0.5
         END DO
+    END DO
+    END
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CALCUALTE PROTEIN ALPHA-CARBON CENTER OF MASS
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    SUBROUTINE CALCULATE_CA_COM(COM,C,nconf,nres)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! VARIABLES
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    IMPLICIT NONE
+    INTEGER,INTENT(in) :: nconf,nres
+    DOUBLE PRECISION,INTENT(in) :: C(1:nconf,1:nres,1:3)
+    DOUBLE PRECISION,INTENT(inout) :: COM(1:nconf,1:3)
+
+    INTEGER :: i,j
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CALCULATE
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    COM = 0
+    DO i=1,nconf
+        DO j=1,nres
+            COM(i,1) = COM(i,1) + C(i,j,1)
+            COM(i,2) = COM(i,2) + C(i,j,2)
+            COM(i,3) = COM(i,3) + C(i,j,3)
+        END DO
+        COM(i,1) = COM(i,1)/nres
+        COM(i,2) = COM(i,2)/nres
+        COM(i,3) = COM(i,3)/nres
     END DO
     END
 

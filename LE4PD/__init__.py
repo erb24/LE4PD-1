@@ -1,2 +1,3 @@
 from .molecule import protein
-from . import ensembles
+from .dynamics import dynamics
+from .util import properties, properties_util

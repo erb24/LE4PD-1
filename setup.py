@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name = 'LE4PD',
-    version = '0.1',
+    version = '0.2',
     author = 'Pablo Romano',
     description = 'Python API for Protein Dynamics using the Langevin Formalism (LE4PD)',
     url = 'https://github.com/GuenzaLab/LE4PD',

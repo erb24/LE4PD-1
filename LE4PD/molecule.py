@@ -3,7 +3,7 @@ from warnings import warn
 from urllib.request import urlretrieve
 import numpy as np
 import mdtraj as md
-from LE4PD.util import properties
+from LE4PD import properties
 
 """Module to manage topology of varying molecule types. Currently only proteins
 are implemented. Future versions will contain nucleic acids such as RNA and DNA.

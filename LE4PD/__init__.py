@@ -1,3 +1,4 @@
 from .molecule import protein
 from .dynamics import dynamics
-from .util import properties, properties_util
+from . import properties
+from .util import properties_util

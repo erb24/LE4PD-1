@@ -1,7 +1,7 @@
 import numpy as np
 import mdtraj as md
 import warnings
-from LE4PD.ensemble.util import properties_util as util
+from LE4PD.util import properties_util as util
 
 
 def calculate_a_matrix(self):

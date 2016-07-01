@@ -1,5 +1,5 @@
 import numpy as np
-from LE4PD.util import properties
+from LE4PD import properties
 
 
 class dynamics(object):

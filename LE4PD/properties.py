@@ -448,10 +448,10 @@ def save_modes_pdb(self, max_mode=10, max_conf=20):
         warnings.warn("""Requested number of copies exceeds the number of available modes
         """)
         max_mode = self.n_residues - 1
-        
+
     if max_conf < self.n_conformers:
         idx = np.random.randint(0,self.n_conformers, size=max_conf)
-    for n in range(3, max_mode-3):
+    for n in range(3, max_mode):
         filename = "mode_" + str(n + 1) + ".pdb"
         if max_conf >= self.n_conformers:
             self._MD.save_pdb(filename, bfactors=mode_length_out[n, :])

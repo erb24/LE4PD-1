@@ -12,7 +12,8 @@ setup(
         'numpy',
         'scipy',
         'matplotlib',
-        'mdtraj'
+        'mdtraj',
+        'openmm'
     ],
     zip_safe = False
 )

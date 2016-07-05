@@ -1,12 +1,13 @@
 # Langevin Equation for Protein Dynamics
 
-This API provides a Python interface to use the updated LE4PD fortran codes developed by **Jeremy Copperman**, and **Marina Guenza**. The codes use a coase-grained Langevin formalism to obtain site-specific dynamics of proteins. This formalism takes the structural ensemble available to the protein as input, and generates the relaxation dynamics analytically.
+This API provides a Python interface to use the updated LE4PD fortran codes developed by __Jeremy Copperman__, and __Marina Guenza__. The codes use a coase-grained Langevin formalism to obtain site-specific dynamics of proteins. This formalism takes the structural ensemble available to the protein as input, and generates the relaxation dynamics analytically.
 
 # Installation
-    pip install -e .
+    python setup.py install
+
 
 # References
-* **J. Copperman** and **M. G. Guenza** *“Mode Localization in the Cooperative Dynamics of Protein Recognition”* Biophysical Journal (2015) (submitted) arXiv:1509.08913.
-* **J. Copperman** and **M. G. Guenza** *“Predicting protein dynamics from structural ensembles” Journal of Chemical Physics, Invited Contribution for Special Topics Issue on Coarse Graining of Macromolecules, Biopolymers, and Membranes”* 143, 243131-12 (2015) doi: 10.1063/1.4935575.
-* **J. Copperman**, **M. G. Guenza** *“A Coarse-Grained Langevin Equation for Protein Dynamics: Global anisotropy and a mode approach to local complexity”* J. Phys. Chem. B, Festschrift issue honoring Branka Ladanyi, 119,  9195 (2015). DOI:10.1021/jp509473z.
-* **E. Caballero-Manrique**, **M. G. Guenza** *“A Langevin Equation Approach to Bridge Different Timescales of Relaxation in Protein Dynamics”* 51st Annual Meeting of the Biophysical Society, MAR 03-07, 2007. Biophysical Journal 377A (2007).
+* __J. Copperman__ and __M. G. Guenza__ _"Mode Localization in the Cooperative Dynamics of Protein Recognition"_" Biophysical Journal (2015) (submitted) arXiv:1509.08913.
+* __J. Copperman__ and __M. G. Guenza__ _"Predicting protein dynamics from structural ensembles” Journal of Chemical Physics, Invited Contribution for Special Topics Issue on Coarse Graining of Macromolecules, Biopolymers, and Membranes"_" 143, 243131-12 (2015) doi: 10.1063/1.4935575.
+* __J. Copperman__, __M. G. Guenza__ _"A Coarse-Grained Langevin Equation for Protein Dynamics: Global anisotropy and a mode approach to local complexity"_" J. Phys. Chem. B, Festschrift issue honoring Branka Ladanyi, 119,  9195 (2015). DOI:10.1021/jp509473z.
+* __E. Caballero-Manrique__, __M. G. Guenza__ _"A Langevin Equation Approach to Bridge Different Timescales of Relaxation in Protein Dynamics"_" 51st Annual Meeting of the Biophysical Society, MAR 03-07, 2007. Biophysical Journal 377A (2007).

@@ -243,14 +243,14 @@ def calculate_MSF(self):
 
 
 def calculate_NMR_observables(self):
-    timescale = (len(self.time) - 1) / 1000
+    timescale = (len(self.P2[:,0]) - 1) / 1000
 
     T1 = np.zeros(self.n_residues - 1, dtype=float, order='F')
     T2 = np.zeros(self.n_residues - 1, dtype=float, order='F')
     NOE = np.zeros(self.n_residues - 1, dtype=float, order='F')
 
-    P2 = np.array(self.P2, dtype=float, order='F')
-    time = np.array(self.time, dtype=float, order='F')
+    P2 = np.array(self.P2[:,1:], dtype=float, order='F')
+    time = np.array(self.P2[:,0], dtype=float, order='F')
     util.calculate_nmr_observables(
         T1, T2, NOE, P2, time, self._NHfactor, timescale, self.n_residues)
 
@@ -309,7 +309,13 @@ def calculate_Q_matrix(self):
     self._Q = Q
     self._QI = QI
 
-
+"""TODO: The time units prepared by the calculate_P2 method, can be
+unnecessarily small, and unevenly spaced. This could potentially be a bug and
+should be looked into. Additionally, it makes no sense to have a separate
+attribute (P2_time and P2). This should be concatenated such that P2_time is the
+first column, and the remainder all correspond to a bond P2. This would give
+P2.shape = (1000 * order + 1, self.n_residues)
+"""
 def calculate_P2(self, order=4):
     # Prepare bond matrix in NH basis as f2py input
     NH = np.array(self._NH_matrix.mean(axis=0), dtype=float, order='F')
@@ -347,8 +353,7 @@ def calculate_P2(self, order=4):
     self.mode_length = modelength.T
     self.tau = tau
     self.tau_m1 = taum
-    self.time = time
-    self.P2 = P2
+    self.P2 = np.insert(P2, 0, time, axis=1)
 
 
 def calculate_R_matrix(self):
@@ -369,7 +374,7 @@ def calculate_rmsd(self, reference=0, atom_indices=None, precentered=False):
     self.rmsd = rmsd
 
 
-def calculate_SASA(self, probe_radius=0.14, n_sphere_points=960):
+def calculate_SASA(self, probe_radius=0.14, n_sphere_points=250):
     sasa = md.shrake_rupley(self._MD, mode='residue',
                             probe_radius=probe_radius, n_sphere_points=n_sphere_points)
     self.sasa = (sasa * 100 / (4 * np.pi))**0.5
@@ -408,28 +413,47 @@ def calculate_U_matrix(self):
     self._U = U
 
 
-def save_modes_pdb(self, max_modes=7):
-        # Create atomic count array, with the number of Atoms Per Residue (apr)
+def save_modes_pdb(self, max_mode=10, max_conf=20):
+    """
+	Attributes:
+	-----------
+	self: object
+			Imports the protein.dynamics object.
+		max_mode: int (Default: 10)
+			Maximum number of modes to be saved to pdb file.
+		max_conf: int
+			Maximum number of conformers to be saved to pdb files. For cases
+            where there are more available conformations than max_conf
+            (typically the case for simulation data), this method will randomly
+            select conformations.
+	"""
+    # Create atomic count array, with the number of Atoms Per Residue (apr)
     apr = np.squeeze([len(self.top.select('resid ' + str(i)))
                       for i in range(self.n_residues)])
     apr = np.array(apr, dtype=int, order='F')
 
     # Prepare input mode length as fortran contiguous array
-    mlen_in = np.array(self.mode_length, dtype=float, order='F')
+    mode_length_in = np.array(self.mode_length, dtype=float, order='F')
 
     # Create output array as mode length per atomic site
-    mlen_out = np.zeros((self.n_residues - 1, self.n_atoms),
+    mode_length_out = np.zeros((self.n_residues - 1, self.n_atoms),
                         dtype=float, order='F')
 
     # Calculate output mode length
     util.calculate_mode_length_array(
-        mlen_out, mlen_in, apr, self.n_atoms, self.n_residues)
+        mode_length_out, mode_length_in, apr, self.n_atoms, self.n_residues)
 
     # Save atomic coordinates to pdb files with mode length as bfactor
-    if max_modes > self.n_residues - 1:
-        warnings.warn(
-            """Requested number of copies exceeds the number of available modes""")
-        max_modes = self.n_residues - 1
-    for n in range(3, 3 + max_modes):
+    if max_mode > self.n_residues - 1:
+        warnings.warn("""Requested number of copies exceeds the number of available modes
+        """)
+        max_mode = self.n_residues - 1
+        
+    if max_conf < self.n_conformers:
+        idx = np.random.randint(0,self.n_conformers, size=max_conf)
+    for n in range(3, max_mode-3):
         filename = "mode_" + str(n + 1) + ".pdb"
-        self._MD.save_pdb(filename, bfactors=mlen_out[n, :])
+        if max_conf >= self.n_conformers:
+            self._MD.save_pdb(filename, bfactors=mode_length_out[n, :])
+        elif max_conf < self.n_conformers:
+            self._MD[idx].save_pdb(filename, bfactors=mode_length_out[n, :])

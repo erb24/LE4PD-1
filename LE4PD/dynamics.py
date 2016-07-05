@@ -19,27 +19,43 @@ class dynamics(object):
 			Internal viscosity term.
 	"""
 
-	def __init__(self, molecule, temp=298, fD2O=0.0, int_visc=2.71828,
-				 mass_factor=1.0, NHfactor=1.0, n_iter=200):
+	def __init__(self, molecule, temp=298, fD2O=0.0, internal_viscosity=2.71828,
+				 mass_factor=1.0, NHfactor=1.0, n_iter=200, t0=0, tf=-1):
 
 		self.temp = temp
 		self._fD2O = fD2O
 		self._fH2O = 1.0 - self._fD2O
-		self._internal_viscosity = int_visc
+		self._internal_viscosity = internal_viscosity
 		self._NHfactor = NHfactor
 		self._n_iter = n_iter
 
 		# Import molecule class attributes
-		self._MD = molecule._MD
-		self.top = molecule.top
-		self.xyz = molecule.xyz
-		self.n_conformers = molecule.n_conformers
+		self._MD = molecule._MD[t0:tf]
+
+		# Remove any selected atoms
+		if molecule._skip_atoms is not None:
+			for atom in molecule._skip_atoms:
+				if atom == "CA" or atom == "N" or atom == "H":
+					warn("""Cannot skip atoms from the peptide backbone as these are coarse-graining sites. These atom types will be ignored.
+					""")
+					pass
+				else:
+					selection_criteria = "name != %s" % atom
+					self._MD = self._MD.atom_slice(self._MD.top.select(selection_criteria))
+
+		# Remove any select residues
+		if molecule._skip_residues is not None:
+			for residue in molecule._skip_residues:
+				selection_criteria = "resname != %s" % residue
+				self._MD = self._MD.atom_slice(self._MD.top.select(selection_criteria))
+
+		self.top = self._MD.top
+		self.xyz = self._MD.xyz
+		self.n_conformers = self._MD.xyz.shape[0]
 		self.atoms = molecule.atoms
 		self.n_atoms = molecule.n_atoms
 		self.residues = molecule.residues
 		self.n_residues = molecule.n_residues
-		if hasattr(molecule, 'rmsd'):
-			self.rmsd = molecule.rmsd
 
 	@property
 	def predict(self):
@@ -58,14 +74,12 @@ class dynamics(object):
 		properties.calculate_L_matrix(self)
 		properties.calculate_Q_matrix(self)
 		properties.calculate_eigenvalues(self)
+		properties.calculate_aspherocity(self)
 		properties.calculate_P2(self)
 
-	def save_modes_pdb(self, max_modes=10):
-		properties.save_modes_pdb(self, max_modes=max_modes)
+	def save_modes_pdb(self, max_mode=10, max_conf=20):
+		properties.save_modes_pdb(self, max_mode=max_mode, max_conf=max_conf)
 
 	@property
 	def calculate_NMR_observables(self):
 		properties.calculate_NMR_observables(self)
-
-	def calculate_rmsd(self, reference=0, atom_indices=None, precentered=False):
-		properties.calculate_rmsd(self, reference=reference,atom_indices=atom_indices, precentered=precentered)

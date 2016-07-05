@@ -84,6 +84,9 @@ class protein(object):
 			warn("""Please select between building an ensemble from multiple coordinate files, or generating from MD simulations. LE4PD does not support building ensembles from both methods.
 			""")
 
+		self._skip_atoms = skip_atoms
+		self._skip_residues = skip_residues
+
 		# Load structure from PDB file or RCSB Protein Data Bank
 		if fetch is not None:
 			if fetch.endswith(".pdb"):
@@ -151,9 +154,11 @@ class protein(object):
 		self.n_residues = len(self.residues)
 		self.n_conformers = self._MD.xyz.shape[0]
 
-	def predict(self, temp=298, fD2O=0.0, int_visc=2.71828):
+	def predict(self, temp=298, fD2O=0.0, internal_viscosity=2.71828, t0=0, tf=-1):
 		from LE4PD.dynamics import dynamics
-		self.dynamics = dynamics(self)
+		self.dynamics = dynamics(self, temp=temp, fD2O=fD2O,
+						internal_viscosity=internal_viscosity,
+						t0=t0, tf=tf)
 		self.dynamics.predict
 
 	def calculate_rmsd(self, reference=0, atom_indices=None, precentered=False):

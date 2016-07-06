@@ -14,9 +14,9 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     IMPLICIT NONE
-    INTEGER(kind=8), INTENT(in) :: nres
-    DOUBLE PRECISION, INTENT(in) :: M(1:nres,1:nres)
-    DOUBLE PRECISION, INTENT(inout) :: a(1:nres-1,1:nres)
+    INTEGER(kind=8),INTENT(in) :: nres
+    DOUBLE PRECISION,INTENT(in) :: M(1:nres,1:nres)
+    DOUBLE PRECISION,INTENT(inout) :: a(1:nres-1,1:nres)
 
     INTEGER(kind=8) :: i,j,k,n
 
@@ -186,9 +186,9 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     IMPLICIT NONE
-    INTEGER(kind=8), INTENT(in) :: nres
-    DOUBLE PRECISION, INTENT(in) :: R(1:nres,1:nres), fp(1:nres), fratio
-    DOUBLE PRECISION, INTENT(inout) :: H(1:nres,1:nres)
+    INTEGER(kind=8),INTENT(in) :: nres
+    DOUBLE PRECISION,INTENT(in) :: R(1:nres,1:nres), fp(1:nres), fratio
+    DOUBLE PRECISION,INTENT(inout) :: H(1:nres,1:nres)
 
     INTEGER(kind=8) :: i,j,n
     DOUBLE PRECISION :: avg_fppr
@@ -220,10 +220,10 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     IMPLICIT NONE
-    INTEGER(kind=8), INTENT(in) :: natoms, nres
-    INTEGER, INTENT(in) :: apr(1:nres) ! atoms per residue
-    DOUBLE PRECISION, INTENT(in) :: mlen_in(1:nres-1,1:nres-1)
-    DOUBLE PRECISION, INTENT(inout) :: mlen_out(1:nres-1,1:natoms)
+    INTEGER(kind=8),INTENT(in) :: natoms, nres
+    INTEGER,INTENT(in) :: apr(1:nres) ! atoms per residue
+    DOUBLE PRECISION,INTENT(in) :: mlen_in(1:nres-1,1:nres-1)
+    DOUBLE PRECISION,INTENT(inout) :: mlen_out(1:nres-1,1:natoms)
 
     INTEGER(kind=8) :: i,j,k,n
 
@@ -245,6 +245,64 @@
         END DO
     END DO
     END
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CALCULATE MODE TRAJECTORY
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    SUBROUTINE CALCULATE_MODE_TRAJ(mode, bonds, QI, nconf, nres)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! VARIABLES
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    IMPLICIT NONE
+    INTEGER(kind=8),INTENT(in) :: nconf, nres
+    DOUBLE PRECISION,INTENT(in) :: bonds(0:nconf-1,1:nres-1,1:3), QI(1:nres-1,1:nres-1)
+    DOUBLE PRECISION,INTENT(inout) :: mode(0:nconf-1,1:nres-1,1:2)
+
+    INTEGER(kind=8) :: a,n,t
+    DOUBLE PRECISION :: pi, mode_vec(0:nconf-1,1:nres-1,1:3),mode_mag(0:nconf-1,nres-1)
+    pi = 4.D0*DATAN(1.D0)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CALCULATE
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    mode = 0.d0
+    mode_vec = 0.d0
+    mode_mag = 0.d0
+    DO t=0,nconf-1
+        ! Calculate instantaneous mode vector
+        DO a=1,nres-1
+            DO n=1,nres-1
+                mode_vec(t,a,1) = QI(a,n)*bonds(t,n,1)+mode_vec(t,a,1) + mode_vec(t,a,1)
+                mode_vec(t,a,2) = QI(a,n)*bonds(t,n,2)+mode_vec(t,a,2) + mode_vec(t,a,2)
+                mode_vec(t,a,3) = QI(a,n)*bonds(t,n,3)+mode_vec(t,a,3) + mode_vec(t,a,3)
+            END DO
+            mode_mag(t,a) = (mode_vec(t,a,1)**2 +&
+                            &mode_vec(t,a,2)**2 +&
+                            &mode_vec(t,a,3)**2)**0.5
+        END DO
+
+        ! Calculate Phi & Theta
+        DO a=1,nres-1
+            ! Calculate Phi
+            mode(t,a,1) = DATAN(mode_vec(t,a,2)/mode_vec(t,a,1))
+            IF(mode_vec(t,a,1).lt.0.d0)THEN
+                mode(t,a,1) = mode(t,a,1)+pi
+            END IF
+            IF(mode(t,a,1).lt.0.d0)THEN
+                mode(t,a,1) = mode(t,a,1)+2.d0*pi
+            END IF
+
+            ! Calculate Theta
+            mode(t,a,2) = DACOS(mode_vec(t,a,3)/mode_mag(t,a))
+        END DO
+    END DO
+    END
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! CALCULATE MEAN SQUARED FLUCTUATION
@@ -510,8 +568,8 @@
 
     IMPLICIT NONE
     INTEGER(kind=8),INTENT(in) :: nres
-    DOUBLE PRECISION, INTENT(in) :: QI(1:nres-1,1:nres-1), U(1:nres-1,1:nres-1)
-    DOUBLE PRECISION, INTENT(inout) :: w_mu(1:nres-1)
+    DOUBLE PRECISION,INTENT(in) :: QI(1:nres-1,1:nres-1), U(1:nres-1,1:nres-1)
+    DOUBLE PRECISION,INTENT(inout) :: w_mu(1:nres-1)
 
     INTEGER(kind=8) :: i,j,k,n
 
@@ -547,15 +605,15 @@
 
     IMPLICIT NONE
     INTEGER(kind=8),INTENT(in) :: nres, temp, timescale
-    DOUBLE PRECISION, INTENT(in) :: mu(1:nres-1), sigma, blsq
-    DOUBLE PRECISION, INTENT(in) :: NH(1:nres-1, 1:nres-1)
-    DOUBLE PRECISION, INTENT(in) :: Q(1:nres-1,1:nres-1), QI(1:nres-1,1:nres-1)
-    DOUBLE PRECISION, INTENT(inout) :: tau(1:nres-1), tau_m1(1:nres-1)
-    DOUBLE PRECISION, INTENT(inout) :: barriers(1:nres-1)
-    DOUBLE PRECISION, INTENT(inout) :: modelength(1:nres-1,1:nres-1)
-    DOUBLE PRECISION, INTENT(inout) :: lam(1:nres-1)
-    DOUBLE PRECISION, INTENT(inout) :: time(1:1000*timescale+1)
-    DOUBLE PRECISION, INTENT(inout) :: P2(1:1000*timescale+1,1:nres-1)
+    DOUBLE PRECISION,INTENT(in) :: mu(1:nres-1), sigma, blsq
+    DOUBLE PRECISION,INTENT(in) :: NH(1:nres-1, 1:nres-1)
+    DOUBLE PRECISION,INTENT(in) :: Q(1:nres-1,1:nres-1), QI(1:nres-1,1:nres-1)
+    DOUBLE PRECISION,INTENT(inout) :: tau(1:nres-1), tau_m1(1:nres-1)
+    DOUBLE PRECISION,INTENT(inout) :: barriers(1:nres-1)
+    DOUBLE PRECISION,INTENT(inout) :: modelength(1:nres-1,1:nres-1)
+    DOUBLE PRECISION,INTENT(inout) :: lam(1:nres-1)
+    DOUBLE PRECISION,INTENT(inout) :: time(1:1000*timescale+1)
+    DOUBLE PRECISION,INTENT(inout) :: P2(1:1000*timescale+1,1:nres-1)
 
     INTEGER(kind=8) :: i, j, k, n, t, io, index, ipiv(1:nres), t_final, ti, tf, dt
     DOUBLE PRECISION :: AMPsum(1000*timescale+1,1:nres), modeAmp(1:nres-1,1:nres-1)
@@ -687,9 +745,6 @@
                 AMPsum(t,n) = AMPsum(t,n)+modeAmp(n,k)*ES
             END DO
             AMPsum(t,n) = AMPsum(t,n)+NHAmp*DEXP(-t_red(t)/(sigma*0.2))
-            !IF(t.eq.1)THEN
-            !    WRITE(*,*)AMPsum(t,n),lam(n)
-            !END IF
 
 ! Change of variables such that the second order Legendre polynomial of the time
 ! dependent bond orientation function (P2) can be expressed as a function of M1.

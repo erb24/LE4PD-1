@@ -91,7 +91,10 @@ def calculate_eigenvalues(self):
     idx = np.argsort(abs(w_lambda))[::-1]
     w_lambda = np.array(1 / (w_lambda[idx].real), dtype=float, order='F')
     Q = np.array(Q[:, idx], dtype=float, order='F')
-    QI = np.array(np.linalg.inv(Q), dtype=float, order='F')
+    try:
+        QI = np.array(np.linalg.inv(Q), dtype=float, order='F')
+    except:
+        QI = np.array(np.linalg.pinv(Q), dtype=float, order='F')
 
     if w_lambda.min() < 0:
         io = 0.0
@@ -110,6 +113,18 @@ def calculate_eigenvalues(self):
     self.lambda_eigenvalues = w_lambda
     self.mu_eigenvalues = w_mu
     self.nu_eigenvalues = w_nu
+
+
+def calculate_FES(self,bins=50):
+    Rb = 0.00198
+    FES = {}
+    FES_extent = {}
+    for n in range(self.n_residues-1):
+        z,x,y = np.histogram2d(self.modes[:,n,0], self.modes[:,n,1], bins=bins)
+        FES[n] = -Rb*self.temp*np.ma.log(z.T)
+        FES_extent[n] = [x.min(),x.max(),y.min(),y.max()]
+    self.FES = FES
+    self.FES_extent = FES_extent
 
 
 def calculate_friction_coefficients(self):
@@ -187,7 +202,10 @@ def calculate_H(self, fratio):
 
 def calculate_L_matrix(self):
     self._L = np.dot(self._a, np.dot(self._H, self._a.T))
-    self._LI = np.linalg.inv(self._L)
+    try:
+        self._LI = np.linalg.inv(self._L)
+    except:
+        self._LI = np.linalg.pinv(self._L)
     self._LU = np.dot(self._U, self._LI)
 
 
@@ -199,6 +217,14 @@ def calculate_M_matrix(self):
         M[i + 1, i] = -1.0
     M[0, :] = 1.0 / self.n_residues
     self._M = M
+
+
+def calculate_mode_trajectory(self, bins=100):
+    bonds = np.array(self._bonds, dtype=float, order='F')
+    QI = np.array(self._QI, dtype=float, order='F')
+    modes = np.zeros((self.n_conformers,self.n_residues-1,2),dtype=float, order='F')
+    util.calculate_mode_traj(modes, bonds, QI, self.n_conformers, self.n_residues)
+    self.modes = modes
 
 
 def calculate_MSA(self):
@@ -270,7 +296,10 @@ def calculate_Q_matrix(self):
         H = np.array(calculate_H(self, fratio), dtype=float, order='F')
         L = np.array(np.dot(self._a, np.dot(H, self._a.T)),
                      dtype=float, order='F')
-        LI = np.array(np.linalg.inv(L), dtype=float, order='F')
+        try:
+            LI = np.array(np.linalg.inv(L), dtype=float, order='F')
+        except:
+            LI = np.array(np.linalg.pinv(L), dtype=float, order='F')
         LU = np.array(np.dot(U, LI), dtype=float, order='F')
 
         # Calculate lambda eigenvalues and Q-matrix
@@ -280,7 +309,10 @@ def calculate_Q_matrix(self):
         idx = np.argsort(abs(w_lambda))[::-1]
         w_lambda = np.array(1 / (w_lambda[idx].real), dtype=float, order='F')
         Q = np.array(Q[:, idx], dtype=float, order='F')
-        QI = np.array(np.linalg.inv(Q), dtype=float, order='F')
+        try:
+            QI = np.array(np.linalg.inv(Q), dtype=float, order='F')
+        except:
+            QI = np.array(np.linalg.pinv(Q), dtype=float, order='F')
 
         if w_lambda.min() < 0:
             io = 0.0

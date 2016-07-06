@@ -9,7 +9,7 @@ class dynamics(object):
 	molecule: object
 			This imports the molecule class which contains either the topology
 			of protein or nucleic classes.
-		temp: float
+		temp: float (Default: 298 K)
 			Desired temperature for thermal white noise.
 		_fD2O: float
 			Fraction of heavy water within solvent.
@@ -17,10 +17,20 @@ class dynamics(object):
 			Fraction of standard water within solvent.
 		_internal_viscosity: float
 			Internal viscosity term.
+		dt: float (Default: 1 ps)
+			Time step in picoseconds used during simulation.
+	Arguments:
+	----------
+		t0: float (Default: 0 ps)
+			Start time in picoseconds. This defines time to start slicing the
+			trajectory.
+		tf: float (Default: -1)
+			Stop time in picoseconds. This defines time to stop slice the
+			trajectory.
 	"""
 
 	def __init__(self, molecule, temp=298, fD2O=0.0, internal_viscosity=2.71828,
-				 mass_factor=1.0, NHfactor=1.0, n_iter=200, t0=0, tf=-1):
+				 mass_factor=1.0, NHfactor=1.0, n_iter=200, t0=0, tf=-1, dt=1):
 
 		self.temp = temp
 		self._fD2O = fD2O
@@ -28,6 +38,7 @@ class dynamics(object):
 		self._internal_viscosity = internal_viscosity
 		self._NHfactor = NHfactor
 		self._n_iter = n_iter
+		self.dt = dt
 
 		# Import molecule class attributes
 		self._MD = molecule._MD[t0:tf]
@@ -76,10 +87,11 @@ class dynamics(object):
 		properties.calculate_eigenvalues(self)
 		properties.calculate_aspherocity(self)
 		properties.calculate_P2(self)
+		properties.calculate_mode_trajectory(self)
+		properties.calculate_NMR_observables(self)
+
+	def calculate_FES(self, bins=100):
+		properties.calculate_FES(self, bins=bins)
 
 	def save_modes_pdb(self, max_mode=10, max_conf=20):
 		properties.save_modes_pdb(self, max_mode=max_mode, max_conf=max_conf)
-
-	@property
-	def calculate_NMR_observables(self):
-		properties.calculate_NMR_observables(self)

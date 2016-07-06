@@ -731,6 +731,7 @@
 
 ! Calculate the M1 bond auto-correlation. This can be found in equation 2.7 from
 ! Jeremy Coppermans's thesis.
+    AMPsum = 0.d0
     tau_run_avg = 0.d0
     tau_m1_run_avg = 0.d0
     DO n=1,nres-1                       ! Residue Loop
@@ -760,14 +761,17 @@
                     X2 = (1.d0-(AMPsum(t,n)**2))/(AMPsum(t,n)**2)
                 END IF
 
-                P2(t,n) = 1.d0-(3.d0*X2)+(3.d0*(DSQRT(X2)**3)*(1.d0/(2.d0/pi)-DATAN(DSQRT(X2))))
+                P2(t,n) = 1.d0-(3.d0*X2)+(3.d0*(DSQRT(X2)**3) * &
+                        & (1.d0/(2.d0/pi)-DATAN(DSQRT(X2))))
 
-                IF(P2(t,n).le.10e-9)THEN
-                    P2(t,n) = 1e-9
+                IF(P2(t,n).le.10E-9)THEN
+                    P2(t,n) = 1E-9
                 END IF
             ELSE
-                P2(t,n) = ((3.d0/5.d0)*(AMPsum(t,n)**2)) + ((6.d0/35.d0)*(AMPsum(t,n)**2)**2) +&
-                        & ((8.d0/105.d0)*(AMPsum(t,n)**2)**3) + ((16.d0/385.d0)*(AMPsum(t,n)**2)**4)
+                P2(t,n) = ((3.d0/5.d0)*(AMPsum(t,n)**2)) + &
+                        & ((6.d0/35.d0)*(AMPsum(t,n)**2)**2) + &
+                        & ((8.d0/105.d0)*(AMPsum(t,n)**2)**3) + &
+                        & ((16.d0/385.d0)*(AMPsum(t,n)**2)**4)
             END IF
 
 ! Rescale reduced times to real time by sigma factor
@@ -780,11 +784,12 @@
 
 ! Calculate M1 bond autocorrelation relaxation time
                 tau_m1_run_avg(t+1,n) = 0.5 * (t_red(t)-t_red(t-1)) * &
-                                    &(AMPsum(t,n)+AMPsum(t-1,n)) + tau_m1_run_avg(t,n)
+                                    & (AMPsum(t,n)+AMPsum(t-1,n)) + &
+                                    & tau_m1_run_avg(t,n)
             END IF
 
-            IF(P2(t,n).le.1e-8)THEN
-                P2(t,n) = 1e-8
+            IF(P2(t,n).le.1E-8)THEN
+                P2(t,n) = 1E-8
             END IF
         END DO
         tau(n) = tau_run_avg(t_final,n)/sigma
@@ -859,10 +864,10 @@
         DO i=1,nres-1
             DO j=1,nres-1
                 U(n,i,j) = bond(n,i,1)*bond(n,j,1) + &
-                          &bond(n,i,2)*bond(n,j,2) + &
-                          &bond(n,i,3)*bond(n,j,3) + &
-                          &c*MSF(n,i,j) + c*MSF(n,i+1,j+1) - &
-                          &c*MSF(n,i+1,j) - c*MSF(n,i,j+1)
+                        & bond(n,i,2)*bond(n,j,2) + &
+                        & bond(n,i,3)*bond(n,j,3) + &
+                        & c*(MSF(n,i,j) + MSF(n,i+1,j+1) - &
+                        & MSF(n,i+1,j) - MSF(n,i,j+1))
             END DO
         END DO
     END DO

@@ -190,7 +190,7 @@
     DOUBLE PRECISION,INTENT(in) :: R(1:nres,1:nres), fp(1:nres), fratio
     DOUBLE PRECISION,INTENT(inout) :: H(1:nres,1:nres)
 
-    INTEGER(kind=8) :: i,j,n
+    INTEGER(kind=8) :: i,j
     DOUBLE PRECISION :: avg_fppr
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -615,7 +615,7 @@
     DOUBLE PRECISION,INTENT(inout) :: time(1:1000*timescale+1)
     DOUBLE PRECISION,INTENT(inout) :: P2(1:1000*timescale+1,1:nres-1)
 
-    INTEGER(kind=8) :: i, j, k, n, t, io, index, t_final, ti, tf, dt
+    INTEGER(kind=8) :: i, j, k, n, t, index, t_final, ti, tf, dt
     DOUBLE PRECISION :: AMPsum(1000*timescale+1,1:nres), modeAmp(1:nres-1,1:nres-1)
     DOUBLE PRECISION :: w1, w2, w3, X2, ES, t_red(1:1000*timescale+1), fricorr(1:nres-1)
     DOUBLE PRECISION :: norm(1:nres-1), modenorm(1:nres-1)

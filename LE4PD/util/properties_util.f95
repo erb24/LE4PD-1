@@ -432,15 +432,15 @@
     DOUBLE PRECISION :: c2, di, d2, rnhin3, w0, w1, w2, w3, w4
     DOUBLE PRECISION :: uo, hp, wh, wn, gh, gn, dn, pi
     DOUBLE PRECISION :: time(0:1000*timescale), dt(1:1000*timescale)
-	DOUBLE PRECISION :: fj0(1:nres-1), fint0(0:1000*timescale,1:nres-1)
-	DOUBLE PRECISION :: fints0(0:1000*timescale,1:nres-1)
-	DOUBLE PRECISION :: fj1(1:nres-1), fint1(0:1000*timescale,1:nres-1)
-	DOUBLE PRECISION :: fints1(0:1000*timescale,1:nres-1)
-	DOUBLE PRECISION :: fj2(1:nres-1), fint2(0:1000*timescale,1:nres-1)
-	DOUBLE PRECISION :: fints2(0:1000*timescale,1:nres-1)
+    DOUBLE PRECISION :: fj0(1:nres-1), fint0(0:1000*timescale,1:nres-1)
+    DOUBLE PRECISION :: fints0(0:1000*timescale,1:nres-1)
+    DOUBLE PRECISION :: fj1(1:nres-1), fint1(0:1000*timescale,1:nres-1)
+    DOUBLE PRECISION :: fints1(0:1000*timescale,1:nres-1)
+    DOUBLE PRECISION :: fj2(1:nres-1), fint2(0:1000*timescale,1:nres-1)
+    DOUBLE PRECISION :: fints2(0:1000*timescale,1:nres-1)
     DOUBLE PRECISION :: fj3(1:nres-1), fint3(0:1000*timescale,1:nres-1)
-	DOUBLE PRECISION :: fints3(0:1000*timescale,1:nres-1)
-	DOUBLE PRECISION :: fj4(1:nres-1), fint4(0:1000*timescale,1:nres-1)
+    DOUBLE PRECISION :: fints3(0:1000*timescale,1:nres-1)
+    DOUBLE PRECISION :: fj4(1:nres-1), fint4(0:1000*timescale,1:nres-1)
     DOUBLE PRECISION :: fints4(0:1000*timescale,1:nres-1)
 
 ! ORIGINAL COMMENT (???):
@@ -451,13 +451,13 @@
 !   or at the very least add comments to describe what is being done.
 
     uo = 1.256637D-06
-	hp = 6.62608D-34
-	wh = 599.98D+06
-	wn = 60.8D+06
-	gh = 26.7519D+07
-	gn = -2.7126D+07
-	dn = 160D-06
-	pi = 3.141592654d0
+    hp = 6.62608D-34
+    wh = 599.98D+06
+    wn = 60.8D+06
+    gh = 26.7519D+07
+    gn = -2.7126D+07
+    dn = 160D-06
+    pi = 3.141592654d0
     rnhin3 = 9.90688385D+29
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -540,8 +540,8 @@
     END DO
 
     di = uo*uo*hp*hp*gh*gh*gn*gn                ! (uo*hp*gh*gn)**2
-	d2 = di*rnhin3*rnhin3/(64*pi*pi*pi*pi)      ! (di*(rnhin3**2))/(8*(pi**2))**2
-	c2 = 4*pi*pi*wn*wn*dn*dn/3                  ! ((2*pi*wn*dn)**2)/3
+    d2 = di*rnhin3*rnhin3/(64*pi*pi*pi*pi)      ! (di*(rnhin3**2))/(8*(pi**2))**2
+    c2 = 4*pi*pi*wn*wn*dn*dn/3                  ! ((2*pi*wn*dn)**2)/3
 
     DO n=1,nres-1
         ! Calculate T1 per residue
@@ -615,7 +615,7 @@
     DOUBLE PRECISION,INTENT(inout) :: time(1:1000*timescale+1)
     DOUBLE PRECISION,INTENT(inout) :: P2(1:1000*timescale+1,1:nres-1)
 
-    INTEGER(kind=8) :: i, j, k, n, t, io, index, ipiv(1:nres), t_final, ti, tf, dt
+    INTEGER(kind=8) :: i, j, k, n, t, io, index, t_final, ti, tf, dt
     DOUBLE PRECISION :: AMPsum(1000*timescale+1,1:nres), modeAmp(1:nres-1,1:nres-1)
     DOUBLE PRECISION :: w1, w2, w3, X2, ES, t_red(1:1000*timescale+1), fricorr(1:nres-1)
     DOUBLE PRECISION :: norm(1:nres-1), modenorm(1:nres-1)
@@ -793,7 +793,7 @@
             END IF
         END DO
         tau(n) = tau_run_avg(t_final,n)/sigma
-		tau_m1(n) = tau_m1_run_avg(t_final,n)/sigma
+        tau_m1(n) = tau_m1_run_avg(t_final,n)/sigma
     END DO
     END
 

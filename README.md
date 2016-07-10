@@ -3,10 +3,17 @@
 This API provides a Python interface to use the updated LE4PD fortran codes developed by __Jeremy Copperman__, and __Marina Guenza__. The codes use a coase-grained Langevin formalism to obtain site-specific dynamics of proteins. This formalism takes the structural ensemble available to the protein as input, and generates the relaxation dynamics analytically.
 
 # Installation
+The installation can be done simply with pip...
+
     pip install -e .
 
+The source files are written in Fortran, and while pre-compiled files are in the LE4PD/util/ directory, it is recommended the user compile these manually.
+
+    f2py -m properties_util --fcompiler=gfortran --link-llapack -c properties_util.f95
+
+
 # Examples
-Examples for using LE4PD are located in LE4PD/examples. Two examples are present: ensemble and trajectory. LE4PD_ensemble_example shows how to set up the analysis for an ensemble of NMR experimental data from local files or fetched from the [Protein Data Bank](www.rcsb.org). LE4PD_trajectory_example performs the analysis on a 1ns simulation of Ubiquitin with modified residues.
+Examples for using LE4PD are located in LE4PD/examples. Two examples are present: ensemble and trajectory. LE4PD_ensemble_example shows how to set up the analysis for an ensemble of NMR experimental data from local files or fetched from the [Protein Data Bank](http://www.rcsb.org). LE4PD_trajectory_example performs the analysis on a 1ns simulation of Ubiquitin with modified residues.
 
 # References
 * __J. Copperman__ and __M. G. Guenza__ _"Mode Localization in the Cooperative Dynamics of Protein Recognition"_" Biophysical Journal (2015) (submitted) arXiv:1509.08913.

@@ -7,7 +7,7 @@ The installation can be done simply with pip...
 
     pip install -e .
 
-The source files are written in Fortran, and while pre-compiled files are in the LE4PD/util/ directory, it is recommended the user compile these manually.
+The source files are written in Fortran, and while pre-compiled files are in LE4PD/util/, it is recommended the user compile these manually.
 
     f2py -m properties_util --fcompiler=gfortran --link-llapack -c properties_util.f95
 

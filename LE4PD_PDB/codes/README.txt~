@@ -1,0 +1,30 @@
+Codes with a _cmp in them are set up to run for a protein complex, which can be one protein or many proteins.
+
+average_cmp.f03
+average.f03
+Calculates averages of quantities over the conformers.
+
+entropy_cmp.f03
+entropy.f03
+Quick code which calculates the estimated configurational entropy from the quasiharmonic approximation.
+
+error.f
+calculates
+gather_cmp.f
+gather.f
+LUI_calc_cmp.f03
+LUI_calc.f03
+p2_lb_cmp.f
+p2_lb.f
+p2_lbscale.f
+pdb_calc_cmp.f03
+pdb_calc.f03
+pdb_mode_cmp.f03
+pdb_modesum.f03
+pdb_split_cmp.f03
+pdb_split.f03
+README.txt
+read_rsa_cmp.f03
+read_rsa.f03
+T1T2_NH_cmp.f
+T1T2_NH.f

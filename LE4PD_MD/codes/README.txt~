@@ -1,0 +1,67 @@
+fes.plt
+gnuplot commands to make a nice plot of the mode fes from the files fe_*.dat
+
+print.sh
+Uses fes.plt and runs a script to make .eps files of the mode FES for your choice of modes.
+
+gather.f
+Takes output of T1T2_NH.f and outputs separate T1, T2, and NOE files.
+
+indexNH.f
+Makes index of N and H atoms for NH dipole vector projection.
+
+input.f
+Learns a few things about the trajectory, like the number of frames.
+
+LUI_calc.f03
+Here is the action-- builds friction coefficients, diagonalizes U^-1 L^-1 to give eigenvalues and mode lengths.
+
+mode_avall.f mode_av.f
+Script to bin up average structure (avall for all atoms, av for alpha-carbons only) in each mode vector orientation for choice of modes. Set up to run in a separate directory from the trajectories, as it will output thousands of files. This is not the smartest implementation, talk to Pablo for better ideas. Pay attention to trajectory path it is reading from. avall requires a separate alpha-carbon .g96 file and an all protein atom .g96 file.
+
+mode_mad.f
+Calculates mode FES with bins of equal solid angle (for better statistics, but looks wierd), and calculates median average deviation of the free energy with mode orientation.
+
+mode_rect.f
+Calculates mode FES with square bins so easier to look at.
+
+NHCA_batch.f
+A code to calculate bond vector time correlation functions, can comment back in to calculate NH vector tcf. Don't use this, use tcf.f instead.
+
+NH_Qmatrix.f
+Calculates Qmatrix for NH vectors as opposed to CA-CA vectors.
+
+p2_gNH_intCA.f
+Calculates m1 and p2 functions along the sequence. Corrects global modes to NH vector orientation but leaves internal modes same as CA-CA basis.
+
+p2_writeCAint.f
+p2_writeCArot.f
+Calculates and writes to file m1 functions along the sequence from the theory for the CA-CA basis.
+
+pdb.f
+Takes pdb as input and outputs a few necessary things about the protein, like the number of residues and the van der waals radii of the residues.
+
+pdbmodes.f
+Takes qm_* files as input (which is the mode amplitudes along the sequence (qm(i,a)**2)/eigmu(a) and outputs pdb files with the B-factors replaced with the local mode lengthscale LML. Indexing is along the bonds, mapped to residues, which you may want to change.
+
+resarea.f
+Calculates effective sphere radius from SAS calculation output of GROMACS. I think it is set for Gromacs 4.5.5 output.
+
+smsd.f
+Calculates mean-squared displacement.
+
+structure_script
+Folder that contains some codes to look at the FES and average structure. Beware!
+
+T1T2_NH.f
+Calculates NMR relaxation from p2 function.
+
+tcf.f
+calculates m1 time correlation functions along the sequence (CA-CA basis).
+
+tcfint.f
+tcfrot.f
+same as above but points to trajectories without rotation (PROTNAME.g96) and with rotation (PROTNAME_rot.g96) which are made in the script I gave Eric.
+
+umatrix.f
+Calculates U^-1 matrix from trajectory.

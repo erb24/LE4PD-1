@@ -1,0 +1,118 @@
+#!/bin/bash
+#!/bin/bash -l
+#PBS -N NAMEOFPROT
+#PBS -q generic
+#PBS -l nodes=1:ppn=4
+#PBS -d /path/to/NAMEOFPROT/
+#PBS -o /path/to/NAMEOFPROT/NAMEOFPROT.log
+#PBS -e /path/to/NAMEOFPROT/NAMEOFPROT.log
+#PBS -j oe
+
+### this will submit to the "generic" queue on ACISS
+### requesting 1 node and 1 processor per node
+### change ppn to 12 if you want to run 12 processes with this script
+
+# Load any modules needed to run your software
+# the examples below load modules for running OpenMPI jobs
+protname="NAMEOFPROT" #replace all instances of NAMEOFPROT in file with name of your system
+time=0
+temp=298
+fd20=0.0
+traj=~/protein/${protname}/${protname}_pro1.xtc
+top=~/protein/${protname}/${protname}_pro1.tpr
+SIMB=0
+SIME=1000
+
+module unload gromacs/4.6.1p #you probably don't need this
+module load gromacs/4.5.5_sngl #GROMACS commands written for this version
+
+cd /path/to/NAMEOFPROT/
+export NPROCS=`wc -l $PBS_NODEFILE |gawk '//{print $1}'`
+echo $NPROCS
+
+# the following lines are not required, but can be useful
+# for debugging purposes:
+#diplays PBS work directory
+echo "PBS_O_WORKDIR:" $PBS_O_WORKDIR
+#cd $PBS_O_WORKDIR
+
+#displays nodefile and contents of nodefile, useful for running MPI
+echo `rm hostfile.tmp`
+echo "PBS_NODEFILE:" $PBS_NODEFILE
+cat $PBS_NODEFILE > hostfile.tmp
+
+#displays PBS jobname and jobid
+echo "PBS_JOBNAME, PBS_JOBID:" $PBS_JOBNAME $PBS_JOBID
+
+#displays username and hostname,
+export USER_NAME=`whoami`
+export HOST_NAME=`hostname -s`
+echo "Hello from $USER_NAME at $HOST_NAME"
+
+#make sure we are running the MPI version we want:
+#which mpirun
+
+# execute program here:
+#  -np = number of cpus to use
+#  --hostfile = name of hostfile to use, not required if MPI is compiled with torque (mpi-tor modules)
+
+echo $temp > 'temp'
+echo $fd20 > 'fd20'
+echo $protname > protname.txt
+echo "1" > rr #protein group
+echo "1" >> rr
+echo "3" > gg #alpha-carbons
+trjconv -f $traj -s $top -o ${protname}.xtc -pbc cluster -b $SIMB -e $SIME < rr #fix periodic boundary conditions
+trjconv -f ${protname}.xtc -s $top -o ${protname}.xtc -fit rot+trans < rr #remove rotations and translations of protein
+trjconv -f ${protname}.xtc -s $top -o ${protname}.g96 < gg #alpha-carbons
+trjconv -f ${protname}.xtc -o ${protname}_first.pdb -s $top -dump $SIMB < rr #make pdb file
+trjconv -f ${protname}.xtc -o ${protname}.gro -s $top -dump $SIMB < rr #make .gro file
+g_sas -f ${protname}.xtc -s $top -or resarea.xvg < rr #solvent exposed surface area calculation
+rm ./#*#
+gfortran ../codes/input.f -o input.exe
+./input.exe #counts properties of trajectory
+gfortran ../codes/pdb.f -o pdb.exe -llapack
+./pdb.exe #pulls some protein properties
+
+j=1
+while read line
+do
+ if [ $j -eq 2 ]
+ then
+  NTOT=$line
+  echo $NTOT
+ fi
+ if [ $j -eq 4 ]
+ then
+  ATOM=$line
+  echo $ATOM
+ fi
+j=$(( j+1 ))
+done < "protname.txt"
+echo $NTOT $ATOM
+
+gfortran ../codes/resarea.f -o resarea.exe
+./resarea.exe #calculates effective spherical radius of solvent-exposed bead
+gfortran ../codes/umatrix.f -o umatrix.exe
+./umatrix.exe #calculates U^-1 matrix
+gfortran ../codes/LUI_calc.f03 -o LUI_calc.exe -llapack
+echo "2.71828" > internalv #ratio of internal viscosity to solvent viscosity
+./LUI_calc.exe #calculates H and L matrices, diagonalization, uses LAPACK libraries
+gfortran ../codes/mode_rect.f -o mode_rect.exe
+./mode_rect.exe #calculates mode free energy surfaces, fe_?.dat
+gfortran ../codes/mode_mad.f -o mode_mad.exe
+./mode_mad.exe #calculates median average deviation in mode free energy surfaces
+
+gfortran ../codes/indexNH.f -o indexNH.exe
+./indexNH.exe #obtains indices for the NH dipole on the backbone (for 15N NMR)
+trjconv -f ${protname}.xtc -s $top -o nitro.g96 -n nitro.ndx
+trjconv -f ${protname}.xtc -s $top -o hydro.g96 -n hydro.ndx
+gfortran ../codes/NH_Qmatrix.f -o NH_Qmatrix.exe
+./NH_Qmatrix.exe #obtains NH vector in expansion in LE4PD modes
+gfortran ../codes/p2_gNH_intCA.f -o p2_gNH_intCA.exe
+./p2_gNH_intCA.exe #calculates m1(t) and p2(t) time correlation functions for the NH vectors (global orientation different, internal dynamics same as CA)
+echo "1.0" > NHfactor.dat
+gfortran ../codes/T1T2_NH.f -o T1T2_NH.exe
+./T1T2_NH.exe #calculates T1, T2, and NOE
+gfortran ../codes/gather.f -o gather.exe
+./gather.exe

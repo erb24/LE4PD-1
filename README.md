@@ -9,7 +9,8 @@ The installation can be done simply with pip...
 
 The source files are written in Fortran, and while pre-compiled files are in LE4PD/util, it is recommended the user compile these manually.
 
-    f2py -m properties_util --fcompiler=gfortran --link-llapack -c properties_util.f95
+    f2py -m _ensemble_dynamics --fcompiler=gfortran --link-llapack -c _ensemble_dynamics.f95
+    f2py -m _simulation_dynamics --fcompiler=gfortran --link-llapack -c _simulation_dynamics.f95
 
 
 # Examples

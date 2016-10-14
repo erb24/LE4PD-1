@@ -4,11 +4,11 @@ import mdtraj as md
 from LE4PD.util import prepare
 from LE4PD.util import _simulation_dynamics as _dynamics
 
-def system(self, timescale=4, probe_radius=0.14, n_sphere_points=250):
-    calculate_bond_vectors(self)
+def system(self, timescale=4, probe_radius=0.14, n_sphere_points=250, stride=None):
+    calculate_bond_vectors(self, stride=stride)
     calculate_MSA(self)
-    calculate_SASA(self, probe_radius=probe_radius, n_sphere_points=n_sphere_points)
-    calculate_U_matrix(self)
+    calculate_SASA(self, probe_radius=probe_radius, n_sphere_points=n_sphere_points, stride=stride)
+    calculate_U_matrix(self, stride=stride)
     calculate_friction_coefficients(self)
     calculate_sigma(self)
     calculate_H_matrix(self)
@@ -28,7 +28,7 @@ def calculate_a_matrix(self):
     _dynamics.calculate_a_matrix(a, M, self.n_residues)
     self._a = a
 
-def calculate_bond_vectors(self):
+def calculate_bond_vectors(self, stride=None):
     self.n_conformers = 0
     if self._trajfile is None:
         traj = self._topfile
@@ -37,7 +37,7 @@ def calculate_bond_vectors(self):
         traj = self._trajfile
         top = self._topfile
 
-    for chunk in md.iterload(traj, top=top, chunk=self._chunk_size):
+    for chunk in md.iterload(traj, top=top, chunk=self._chunk_size, stride=stride):
         chunk = prepare.solvent(chunk)
         chunk = prepare.atoms(chunk, self._skip_atoms)
         chunk = prepare.residues(chunk, self._skip_residues)
@@ -100,8 +100,10 @@ def calculate_FES(self,bins=50):
     Rb = 0.00198
     FES = {}
     FES_extent = {}
+    phi = np.genfromtxt('phi')
+    theta = np.genfromtxt('theta')
     for n in range(self.n_residues-1):
-        z,x,y = np.histogram2d(self.modes[:,n,0], self.modes[:,n,1], bins=bins)
+        z,x,y = np.histogram2d(phi[:,n], theta[:,n], bins=bins)
         FES[n] = -Rb*self.temp*np.ma.log(z.T)
         FES_extent[n] = [x.min(),x.max(),y.min(),y.max()]
     self.FES = FES
@@ -361,7 +363,7 @@ def calculate_rmsd(self, reference=0, atom_indices=None, precentered=False):
     self.rmsd = rmsd
 
 
-def calculate_SASA(self, probe_radius=0.14, n_sphere_points=250):
+def calculate_SASA(self, probe_radius=0.14, n_sphere_points=250, stride=None):
     self.sasa = np.zeros((self.n_residues))
     if self._trajfile is None:
         traj = self._topfile
@@ -369,7 +371,7 @@ def calculate_SASA(self, probe_radius=0.14, n_sphere_points=250):
     else:
         traj = self._trajfile
         top = self._topfile
-    for chunk in md.iterload(traj, top=top, chunk=self._chunk_size):
+    for chunk in md.iterload(traj, top=top, chunk=self._chunk_size, stride=stride):
         chunk = prepare.solvent(chunk)
         chunk = prepare.atoms(chunk, self._skip_atoms)
         chunk = prepare.residues(chunk, self._skip_residues)
@@ -387,7 +389,7 @@ def calculate_sigma(self):
                   blsq / 1e-18) / (self.fp.mean() * 1e-9)
 
 
-def calculate_U_matrix(self):
+def calculate_U_matrix(self,stride=None):
     contacts = np.zeros((self.n_residues, self.n_residues), dtype=float, order='F')
     R = np.zeros((self.n_residues, self.n_residues), dtype=float, order='F')
     MSF = np.zeros((self.n_residues, self.n_residues), dtype=float, order='F')
@@ -400,7 +402,7 @@ def calculate_U_matrix(self):
         traj = self._trajfile
         top = self._topfile
 
-    for chunk in md.iterload(traj, top=top, chunk=self._chunk_size):
+    for chunk in md.iterload(traj, top=top, chunk=self._chunk_size, stride=stride):
         chunk = prepare.solvent(chunk)
         chunk = prepare.atoms(chunk, self._skip_atoms)
         chunk = prepare.residues(chunk, self._skip_residues)

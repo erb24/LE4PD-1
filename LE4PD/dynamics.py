@@ -52,10 +52,10 @@ class ensemble(object):
 		self.n_residues = molecule.n_residues
 		self.n_conformers = molecule.n_conformers
 
-	def predict(self, timescale=4, probe_radius=0.14, n_sphere_points=250):
+	def predict(self, timescale=4, probe_radius=0.14, n_sphere_points=250,stride=None):
 		from LE4PD.util import analyze_ensemble as analyze
 		analyze.system(self, timescale=timescale, probe_radius=probe_radius,
-						n_sphere_points=n_sphere_points)
+						n_sphere_points=n_sphere_points,stride=stride)
 		self.matrix = matrix.matrix(self)
 
 	def calculate_FES(self, bins=100):
@@ -118,10 +118,10 @@ class simulation(object):
 		self.residues = molecule.residues
 		self.n_residues = molecule.n_residues
 
-	def predict(self, timescale=4, probe_radius=0.14, n_sphere_points=250):
+	def predict(self, timescale=4, probe_radius=0.14, n_sphere_points=250,stride=None):
 		from LE4PD.util import analyze_simulation as analyze
 		analyze.system(self, timescale=timescale, probe_radius=probe_radius,
-						n_sphere_points=n_sphere_points)
+						n_sphere_points=n_sphere_points, stride=stride)
 		self.matrix = matrix.matrix(self)
 
 	def calculate_FES(self, bins=100):

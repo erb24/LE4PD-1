@@ -105,7 +105,7 @@ class protein(object):
 	def predict(self, temp=298, fD2O=0.0, internal_viscosity=2.71828,
 				t0=0, tf=-1, dt=1, timescale=4,
 				probe_radius=0.14, n_sphere_points=250,
-				max_conf=100):
+				max_conf=100,stride=None):
 
 		if self._method == 'ensemble':
 			from LE4PD.dynamics import ensemble as dynamics
@@ -118,8 +118,14 @@ class protein(object):
 					t0=int(t0/dt), tf=int(tf/dt))
 
 		# Predict dynamics with LE4PD
-		self.dynamics.predict(timescale=timescale, probe_radius=probe_radius,
-							n_sphere_points=n_sphere_points)
+		if self._method == 'ensemble':
+			if stride is not None:
+				warnings('Stride feature is not supported for ensemble method. Stride set to None.')
+			self.dynamics.predict(timescale=timescale, probe_radius=probe_radius,
+								n_sphere_points=n_sphere_points)
+		elif self._method == 'simulation':
+			self.dynamics.predict(timescale=timescale, probe_radius=probe_radius,
+							n_sphere_points=n_sphere_points,stride=stride)
 
 	def calculate_rmsd(self, reference=0, atom_indices=None, precentered=False):
 		if self._trajfile is None:

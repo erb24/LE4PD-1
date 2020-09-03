@@ -9,63 +9,43 @@ def gen_protinfo(PROTNAME,G96,TOP):
 	NFRS = int(subprocess.check_output('grep -c "TIMESTEP" '+str(G96),shell=True))
 	NATOMS = int(subprocess.check_output('grep -c "ATOM" '+str(TOP),shell=True))
 
-	array = np.array([protname,N,NFRS,NATOMS],dtype=str)
-	np.savetxt("protname.txt",array.T,fmt="%s")
-
-'''def gen_protinfo(PROTNAME,PDB,TOP):
-        import subprocess
-        import numpy as np
-
-        protname = str(PROTNAME)
-        N = int(subprocess.check_output('grep -c "CA" '+str(TOP),shell=True))
-        NFRS = int(subprocess.check_output('grep -c "MODEL" '+str(PDB),shell=True)-1)
-        NATOMS = int(subprocess.check_output('grep -c "ATOM" '+str(TOP),shell=True))
-
-        array = np.array([protname,N,NFRS,NATOMS],dtype=str)
-        np.savetxt("protname.txt",array.T,fmt="%s")'''
-
-'''def convert_traj(traj):
-	import numpy as np
-	traj = np.loadtxt(str(traj))
-	#Save the trajectory in units of nm
-	np.save('unformatted_traj.npy',traj/10.0)'''
+	return N, NFRS, NATOMS
+	#array = np.array([protname,N,NFRS,NATOMS],dtype=str)
+	#np.savetxt("protname.txt",array.T,fmt="%s")
 
 def convert_traj(G96):
 	import numpy as np
 	import subprocess
-	subprocess.call("sed '/BOX/, +1 d' "+str(G96)+" | sed '/TITLE/, +1 d' | awk 'NF==3' > tmp",shell=True)
-	traj = np.loadtxt('tmp')
+	import platform
 
-	np.save('unformatted_traj.npy',traj)
-	subprocess.call('rm -rfv tmp',shell=True)
+	#Check which system the code is run on. If Linux, I can use 'sed'. For Darwin (macOS) I need 'gsed'.
+	if platform.system() == 'Linux':
+		status = subprocess.call("sed '/BOX/, +1 d' " + str(G96) + " | sed '/TITLE/, +1 d' | awk 'NF==3' > tmp",shell=True)
+	elif platform.system() == 'Darwin':
+		status = subprocess.call("gsed '/BOX/, +1 d' " + str(G96) + " | gsed '/TITLE/, +1 d' | awk 'NF==3' > tmp",shell=True)
+	else:
+		raise OSError("System platform not recognized.")
+	if status == 0:
+		traj = np.loadtxt('tmp')
 
-def make_unformatted_traj(G96):
+		#np.save('unformatted_traj.npy',traj)
+		subprocess.call('rm -rfv tmp', shell=True)
+		return traj
+	else:
+		raise OSError('''Something has gone incorrectly and the unformatted trajectory was not generated.
+		Please check where the .g96 file is located and make sure the correct PATH is specified 
+		in the call to this function.''')
+
+def format_traj(traj, N, NFRS):
 	import numpy as np
-	import sys
 
-	txt = np.genfromtxt('protname.txt',dtype=str)
-	protname = txt[0]
-	N = int(txt[1])
-	nfrs = int(txt[2])
-	#natoms = int(txt[3])
-
-	print(G96)
-	print(protname,N,nfrs)
-
-	dummy = True                    
-	linr = []
-	with open(G96) as f:
-		for line in f:
-			value = line.split()[0].isalpha()
-			if (dummy == False) and (value == False):
-				linr.append(line_prev.split())
-				linr.append(line.split())
-				for i in range(N-2):
-					linr.append(f.readline().split())
-			dummy = value
-			line_prev = line
-
-	np.save('unformatted_traj.npy',np.array(linr,dtype=float))
+	ftraj = np.zeros((3*N, NFRS))
+	for numba, k in enumerate(range(0, N*nfrs, N)):
+		ftraj[numba, :] = traj[k:k+N, 0]
+		ftraj[numba + 1, :] = traj[k:k+N, 1]
+		ftraj[numba + 2, :] = traj[k:k+N, 2]
+		
+	return ftraj
 
 def Umatrix(traj):
 	import numpy as np
@@ -132,17 +112,17 @@ def Umatrix(traj):
 		for j in range(N-1):
 			Umat[i,j] = (np.dot(lx[i,:],lx[j,:]) + np.dot(ly[i,:],ly[j,:]) + np.dot(lz[i,:],lz[j,:]))/(lavm[i]*lavm[j]*nfrs)
 
-	np.save('Umatrix.npy',Umat)
-	np.savetxt('Umatrix',np.insert(np.ravel(Umat),N-1,0))
-	np.save('Rinv.npy',Rinv)
-	np.savetxt('Rij',np.ravel(Rinv))
-	np.savetxt('length',lavm)
-	np.savetxt('lengthsq',lavmsq)
-	np.savetxt('avldot.dat',avdot)
-	np.savetxt('avbl',np.array([avbl]))
-	np.savetxt('avblsq',np.array([avblsq]))
+	#np.save('Umatrix.npy',Umat)
+	#np.savetxt('Umatrix',np.insert(np.ravel(Umat),N-1,0))
+	#np.save('Rinv.npy',Rinv)
+	#np.savetxt('Rij',np.ravel(Rinv))
+	#np.savetxt('length',lavm)
+	#np.savetxt('lengthsq',lavmsq)
+	#np.savetxt('avldot.dat',avdot)
+	#np.savetxt('avbl',np.array([avbl]))
+	#np.savetxt('avblsq',np.array([avblsq]))
 
-	#return avbl,avblsq,Umat
+	return Umat, Rinv, lavm, lavmsq
 
 def fric_calc(PROTNAME,TOP):
 	import numpy as np

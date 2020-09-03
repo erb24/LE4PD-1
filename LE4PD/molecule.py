@@ -85,7 +85,7 @@ class protein(object):
 	def __init__(self, method='simulation'):
 		self._method = method
 
-	def load(self, traj, top=None, skip_atoms=None, skip_residues=None, chunk_size=1000):
+	def load(self, traj, top = None, skip_atoms = None, skip_residues = None, chunk_size = 1000):
 		if self._method == 'ensemble':
 			self._topfile = traj
 			self._skip_atoms = skip_atoms
@@ -94,15 +94,30 @@ class protein(object):
 			prepare.topology(self)
 
 		elif self._method == 'simulation':
-			self._trajfile = traj
-			self._topfile = top
-			self._skip_atoms = skip_atoms
-			self._skip_residues = skip_residues
-			self._chunk_size = chunk_size
-			self._mdtraj = prepare.trajectory(traj, top, skip_atoms, skip_residues)
-			self._n_frames = md.load(traj, top = top).n_frames
-			prepare.topology(self)
-
+			#It isn't worth it right now to allow the trajectory conversion here. Probably better to give
+			#the user a .sh file to do the conversion themselves. The modularized Python yahoos can get over it.
+			#if traj.split('.')[-1] == "xtc":
+				#Convert to g96 format by calling GROMACS using the subprocess module. 
+				#Note that this action requires GROMACS be installed locally.
+				#protname = traj.split('.')[0]
+				#status = subprocess.call("echo '3' | `which gmx` -f " + str(traj) + " -s " + str(top) + " -o " + str(protname) + ".g96", shell = True)
+			if traj.split('.')[-1] != "g96":
+				print("Only accepting .g96 file formats at this time. If you don't have a .g96 trajectory file for the alpha-carbons of \n")
+				print("the protein, please run the 'process.sh file in the main 'LE4PD' directory.")
+			else:
+				self._trajfile = traj
+				self._topfile = top
+				self.protname = traj.split('.')[0]
+				N, NFRS, NATOMS = LE4PD.gen_protinfo(self.protname, self._trajfile, self._topfile)
+				self.nres = N
+				self.nframes = NFRS
+				self.natoms = NATOMS
+				#self._skip_atoms = skip_atoms
+				#self._skip_residues = skip_residues
+				#self._chunk_size = chunk_size
+				#self._mdtraj = prepare.trajectory(traj, top, skip_atoms, skip_residues)
+				#self._n_frames = md.load(traj, top = top).n_frames
+				#prepare.topology(self)
 
 	'''def predict(self, temp=298, fD2O=0.0, internal_viscosity=2.71828,
 				t0=0, tf=-1, dt=1, timescale=4,
@@ -129,9 +144,14 @@ class protein(object):
 			self.dynamics.predict(timescale=timescale, probe_radius=probe_radius,
 							n_sphere_points=n_sphere_points,stride=stride)'''
 
-	def analyze(self):
-		pass
-	def calculate_rmsd(self, frame = 0, atom_indices=None, precentered=False):
+	def prepare_traj(self):
+		self.unformatted_traj = LE4PD.convert_traj(self._trajfile)
+		self.traj = LE4PD.format_traj(self.unformatted_traj, self.nres, self.nframes)
+
+	def calc_umatrix(self):
+		self.umatrix, self.Rinv, self.avbl, self.avblsq = LE4PD.Umatrix(self.unformatted_traj)
+
+	'''def calculate_rmsd(self, frame = 0, atom_indices=None, precentered=False):
 		if self._trajfile is None:
 			self.rmsd = md.rmsd(self._mdtraj, reference=self._mdtraj,
 								frame = frame,
@@ -148,4 +168,4 @@ class protein(object):
 								precentered=precentered)
 				for k in range(len(dummy)):
 					rmsd.append(dummy[k])
-		self.rmsd = np.array(rmsd)
+		self.rmsd = np.array(rmsd)'''

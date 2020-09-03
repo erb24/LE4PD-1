@@ -1,6 +1,10 @@
+# Data repository
+1ns/
+
 # Development Tests
 test.py
 Test.ipynb
+Untitled.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

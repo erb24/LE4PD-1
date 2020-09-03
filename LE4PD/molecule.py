@@ -99,6 +99,7 @@ class protein(object):
 			self._skip_residues = skip_residues
 			self._chunk_size = chunk_size
 			self._mdtraj = prepare.trajectory(traj, top, skip_atoms, skip_residues)
+			self._n_frames = md.load(traj, top = top).n_frames
 			prepare.topology(self)
 
 
@@ -127,17 +128,21 @@ class protein(object):
 			self.dynamics.predict(timescale=timescale, probe_radius=probe_radius,
 							n_sphere_points=n_sphere_points,stride=stride)
 
-	def calculate_rmsd(self, reference=0, atom_indices=None, precentered=False):
+	def calculate_rmsd(self, frame = 0, atom_indices=None, precentered=False):
 		if self._trajfile is None:
-			self.rmsd = md.rmsd(self._mdtraj, reference=reference,
+			self.rmsd = md.rmsd(self._mdtraj, reference=self._mdtraj,
+								frame = frame,
 								atom_indices=atom_indices,
 								precentered=precentered)
 		else:
 			rmsd = []
-			for chunk in md.iterload(self._traj, chunk=self._chunk_size):
+			for chunk in md.iterload(self._trajfile, top = self.topology, chunk=self._chunk_size):
 				chunk = prepare.atoms(chunk, self._skip_atoms)
 				chunk = prepare.atoms(chunk, self._skip_residues)
-				rmsd.append(md.rmsd(chunk, reference=reference,
-									atom_indices=atom_indices,
-									precentered=precentered))
-			self.rmsd = np.array(rmsd)
+				dummy = md.rmsd(chunk, reference=self._mdtraj, 
+								frame = frame,
+								atom_indices=atom_indices,
+								precentered=precentered)
+				for k in range(len(dummy)):
+					rmsd.append(dummy[k])
+		self.rmsd = np.array(rmsd)

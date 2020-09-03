@@ -96,6 +96,8 @@ def calculate_eigenvalues(self):
     self.nu_eigenvalues = w_nu
 
 '''MODIFY THIS SO THAT FES ARE CALCULATED FROM H5PY DATASET'''
+#Needs to be fixed so that the physt library is called to generate the FES
+#and account for the solid angle normalization.
 def calculate_FES(self,bins=50):
     Rb = 0.00198
     FES = {}

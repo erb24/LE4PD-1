@@ -82,8 +82,9 @@ class protein(object):
 	n_conformers: int
 		Total number of conformations from topology.
 	'''
-	def __init__(self, method='simulation'):
+	def __init__(self, method='simulation', T = 298):
 		self._method = method
+		self.temp = T
 
 	def load(self, traj, top = None, skip_atoms = None, skip_residues = None, chunk_size = 1000):
 		if self._method == 'ensemble':
@@ -148,8 +149,29 @@ class protein(object):
 		self.unformatted_traj = LE4PD.convert_traj(self._trajfile)
 		self.traj = LE4PD.format_traj(self.unformatted_traj, self.nres, self.nframes)
 
-	def calc_umatrix(self):
-		self.umatrix, self.Rinv, self.avbl, self.avblsq = LE4PD.Umatrix(self.unformatted_traj)
+	def calc_umatrix(self, protname, N, nfrs, natoms):
+		self.umatrix, self.Rinv, self.avbl, self.avblsq = LE4PD.Umatrix(self.traj, self.protname, self.nres, self.nframes, self.natoms)
+
+	def fric_calc(self, protname, N, nfrs, natoms, intv = 2.71828, viscosity = 1e-3, fd20 = 0.0):
+		self.fratio, self.sigma, self.fric, self.avfr = LE4PD.fric_calc(self._topfile, self.protname, self.nres, self.nframes, 
+																		self.natoms, self.avblsq, self.temp, intv = intv, viscosity = viscosity, fd20 = fd20)
+	def lui_calc(self):
+		self.UILI, self.hmatrix, self.Q, self.QINV, self.lambda_eig, self.mu_eig = LE4PD.LUI_calc(self.protname, self.nres, 
+																				self.nframes, self.umatrix, self.fratio, 
+																				self.avblsq, self.sigma, self.fric, self.Rinv, 
+																				self.temp)
+	def mode_mad(self, nmodes = 10):
+		self.barriers, self.xi_traj, self.theta_phi_traj = LE4PD.mode_mad(self.traj, self.protname, self.nres, 
+															self.nframes, self.Q, self.QINV, self.temp, nmodes = nmodes)
+
+	def tau_convert(self):
+		self.tau, self.tau_scaled = LE4PD.tau_convert(self.lambda_eig, self.sigma, self.barriers, self.temp)
+
+	def LML(self):
+		self.LML = LE4PD.LML(self.Q, self.avbl, self.mu_eig)
+
+
+
 
 	'''def calculate_rmsd(self, frame = 0, atom_indices=None, precentered=False):
 		if self._trajfile is None:

@@ -40,20 +40,22 @@ def format_traj(traj, N, NFRS):
 	import numpy as np
 
 	ftraj = np.zeros((3*N, NFRS))
-	for numba, k in enumerate(range(0, N*nfrs, N)):
-		ftraj[numba, :] = traj[k:k+N, 0]
-		ftraj[numba + 1, :] = traj[k:k+N, 1]
-		ftraj[numba + 2, :] = traj[k:k+N, 2]
-		
+	for numba, k in enumerate(range(0, N*NFRS, N)):
+		ftraj[::3, numba] = traj[k:k+N, 0]
+		ftraj[1::3, numba] = traj[k:k+N, 1]
+		ftraj[2::3, numba] = traj[k:k+N, 2]
+
 	return ftraj
 
-def Umatrix(traj):
+def Umatrix(traj, protname, N, nfrs, natoms):
 	import numpy as np
-	txt = np.genfromtxt('protname.txt',dtype=str)
-	protname = txt[0]
-	N = int(txt[1])
-	nfrs = int(txt[2])
-	natoms = int(txt[3])
+
+	#Old definitions of parameters when reading in from file
+	#txt = np.genfromtxt('protname.txt',dtype=str)
+	#protname = txt[0]
+	#N = int(txt[1])
+	#nfrs = int(txt[2])
+	#natoms = int(txt[3])
 
 	print(protname,N,nfrs,natoms)
 
@@ -61,11 +63,19 @@ def Umatrix(traj):
 	ry = np.zeros((N,nfrs))
 	rz = np.zeros((N,nfrs))
 	Rinv = np.zeros((N,N))
-	traj = np.load(str(traj))
-	for numba,k in enumerate(range(0,N*nfrs,N)):
-		rx[:,numba] = traj[k:k+N,0]
-		ry[:,numba] = traj[k:k+N,1]
-		rz[:,numba] = traj[k:k+N,2]
+
+	#If the trajectory is unformatted
+	#traj = np.load(str(traj))
+	#for numba,k in enumerate(range(0,N*nfrs,N)):
+	#	rx[:,numba] = traj[k:k+N,0]
+	#	ry[:,numba] = traj[k:k+N,1]
+	#	rz[:,numba] = traj[k:k+N,2]
+
+	#Already saved the formatted trajectory
+	for numba, i in enumerate(range(0, 3*N, 3)):
+		rx[numba, :] = traj[i, :]
+		ry[numba, :] = traj[i + 1, :]
+		rz[numba, :] = traj[i + 2, :]
 
 	#Define bond vectors
 	lx = rx[:-1,:] - rx[1:,:] 
@@ -122,9 +132,9 @@ def Umatrix(traj):
 	#np.savetxt('avbl',np.array([avbl]))
 	#np.savetxt('avblsq',np.array([avblsq]))
 
-	return Umat, Rinv, lavm, lavmsq
+	return Umat, Rinv, avbl, avblsq
 
-def fric_calc(PROTNAME,TOP):
+def fric_calc(TOP, protname, N, nfrs, natoms, avblsq, T, intv = 2.71828, viscosity = 1e-3, fd20 = 0.0):
 	import numpy as np
 	import sys
 	import os
@@ -133,15 +143,7 @@ def fric_calc(PROTNAME,TOP):
 	#TOP = str(sys.argv[1])
 	pi = np.pi
 
-
-	#Get basic information from the protname.txt file
-	txt = np.genfromtxt('protname.txt',dtype=str)
-	protname = txt[0]
-	N = int(txt[1])
-	nfrs = int(txt[2])
-	natoms = int(txt[3])
-
-	print(protname,N,nfrs,natoms)
+	print(protname, N, nfrs, natoms)
 
 	#Calculate the Miller radius per bead
 	mradlist = []
@@ -177,15 +179,17 @@ def fric_calc(PROTNAME,TOP):
 				elif dummy[3] == "TYR" : mradlist.append((229.0/(4*pi))**.5)
 				elif dummy[3] == "VAL" : mradlist.append((160.0/(4*pi))**.5)
 
-	array = np.array(mradlist,dtype=str)
-	np.savetxt('mrad.dat',np.array(mradlist).T,fmt='%s')
+	#mrad_array = np.array(mradlist,dtype=str)
+	#np.savetxt('mrad.dat',np.array(mradlist).T,fmt='%s')
 
 
 	#Calculate the average solvent-exposed surface area per bead
 	if os.path.exists("resarea.xvg"):
 		pass
 	else:
-		subprocess.call("echo '1' | gmx_mpi sasa -f "+str(PROTNAME)+".xtc -s "+str(TOP)+" -or resarea.xvg -dt 100",shell=True)
+		raise FileNotFoundError('''I can't find the resarea.xvg file containing the solvent-exposed surface area of each residue.\n
+								Please either run the process.sh file, if you have not already done so, and move the resarea.xvg\n 
+								file into the current working directory.''')
 	resarea = []
 	with open('resarea.xvg') as f:
 		for line in f:
@@ -198,51 +202,28 @@ def fric_calc(PROTNAME,TOP):
 	for area in resarea:
 		rad.append(((area/(4*np.pi))**0.5)*10)
 
-	np.savetxt('avresrad',np.array(rad),fmt="%f")
+	#np.savetxt('avresrad',np.array(rad),fmt="%f")
 	fratio = (np.array(rad).sum()/N)/10
-	print('fratio: ',fratio)
+	print('fratio: ', fratio)
 
-	np.savetxt('fratio',np.array([fratio]))
+	#np.savetxt('fratio',np.array([fratio]))
 
 	#Calculate the friction coefficients
 
 	kB = 1.38066E-23
-	try:
-		T = float(np.loadtxt('temp'))
-		print('Temperature (K): ',T)
-	except OSError:
-		print('Temperature not set. Defaulting to 300 K')
-		T = 300
-		np.savetxt('temp',np.array([T]))
-
-	try:
-		intv = float(np.loadtxt('internalv'))
-		print('Internal viscosity factor: ',intv)
-	except OSError:
-		print('Internal viscosity not set. Defaulting to 2.71828')
-		intv = 2.71828
-		np.savetxt('intv',np.array([intv]))
+	print('Temperature (K): ',T)
+	print('Internal viscosity factor: ',intv)
 
 	#Use NIST formula for viscosity -- good NEAR room temperature and physiological.
 	#Won't work higher than, say, 360 K.
 
-	try:
-		#Load viscosity and convert to Pa s
-		viscosity = float(np.loadtxt('visc.txt'))/1000 
-	except OSError:
-		print('No viscosity given. Using the NIST formula, which is only valid for physiological conditions,')
+	if viscosity == 0:
+		print('No viscosity given. Using the NIST formula, which is only valid for physiological conditions,\n')
 		print('i.e. between about 273 and 310 K.')
 		viscosity = (.2131590-1.96290E-3*T+(.00246411*T)**2+(-.0018462*T)**3)
-		np.savetxt('visc,txt',np.array([viscosity]))
 
-	print("Viscosity (Pa s): ",viscosity)
-	
-
-	try:
-		fd20 = float(np.loadtxt('fd20'))
-	except OSError:
-		fd20 = 0
-		np.savetxt('fd20',np.array([fd20]))
+	print("Viscosity (Pa s): ", viscosity)
+	print("fd20", fd20)
 
 	rv = np.array(mradlist)
 	rw = np.array(rad)
@@ -264,17 +245,17 @@ def fric_calc(PROTNAME,TOP):
 
 	avfr = frit/float(N)
 	avfrw = friwt/float(N)
-	np.savetxt('avfr',np.array([avfr*1.0E-9]))
+	#np.savetxt('avfr',np.array([avfr*1.0E-9]))
 
-	avblsq = float(np.loadtxt('avblsq'))
+	#avblsq = float(np.loadtxt('avblsq'))
 	sigma = (3*kB*T*1E15)/(avblsq*avfr)
 
-	with open('sigma','w') as f:
-		f.write('sigma, 1/ps\n')
-		f.write(str(sigma)+'\n')
+	#with open('sigma','w') as f:
+	#	f.write('sigma, 1/ps\n')
+	#	f.write(str(sigma)+'\n')
 
-	with open('sigma.dat','w') as f:
-		f.write(str(sigma)+'\n')
+	#with open('sigma.dat','w') as f:
+	#	f.write(str(sigma)+'\n')
 
 	fric = np.zeros((N+1,2))
 
@@ -283,20 +264,20 @@ def fric_calc(PROTNAME,TOP):
 	for i in range(N):
 		fric[i+1,:] = np.column_stack([friw[i],fri[i]])
 
-	np.savetxt('fric',fric)
+	#np.savetxt('fric',fric)
 
-	return fratio,sigma,fric
+	return fratio, sigma, fric, avfr
 
-def LUI_calc(fratio,avblsq,sigma,fric,Rinv,T=300):
+def LUI_calc(protname, N, nfrs, U, fratio, avblsq, sigma, fric, Rinv, T):
 	import numpy as np
 	#Get basic information from the protname.txt file
-	txt = np.genfromtxt('protname.txt',dtype=str)
-	protname = txt[0]
-	N = int(txt[1])
-	nfrs = int(txt[2])
-	natoms = int(txt[3])
+	#txt = np.genfromtxt('protname.txt',dtype=str)
+	#protname = txt[0]
+	#N = int(txt[1])
+	#nfrs = int(txt[2])
+	#natoms = int(txt[3])
 
-	print(protname,N,nfrs,natoms)
+	print(protname, N, nfrs)
 
 	avfr = fric[0,1]
 
@@ -329,7 +310,7 @@ def LUI_calc(fratio,avblsq,sigma,fric,Rinv,T=300):
 	LINV = np.linalg.inv(L)
 	L = np.matmul(a,np.matmul(H,a.T))
 	LINV = np.linalg.inv(L)
-	UINV = np.load("Umatrix.npy")
+	UINV = U #np.load("Umatrix.npy")
 	UILI = np.matmul(UINV,LINV)
 
 	#Eigendecomposition of UILI to find eigenvalues and eigenvectors 
@@ -346,45 +327,41 @@ def LUI_calc(fratio,avblsq,sigma,fric,Rinv,T=300):
 
 	mu = 1/(np.diag(np.matmul(QINV_sorted,np.matmul(UINV,QINV_sorted.T))))
 
-	np.save("UILImatrix",UILI)
-	np.savetxt('UILImatrix',np.ravel(UILI))
-	np.save('Lmatrix',L)
-	np.save("Hmatrix",H)
-	np.save("Qmatrix.npy",Q_sorted)
-	np.savetxt("Qmatrix",np.ravel(Q_sorted))
-	np.save("QINVmatrix.npy",QINV_sorted)
-	np.savetxt("QINVmatrix",np.ravel(QINV_sorted))
-	np.save("lambda_eig.npy",eigval_sorted)
-	np.savetxt("lambda_eig",eigval_sorted)
-	np.save("mu_eig.npy",mu)
-	np.savetxt("mu_eig",mu)
+	#np.save("UILImatrix",UILI)
+	#np.savetxt('UILImatrix',np.ravel(UILI))
+	#np.save('Lmatrix',L)
+	#np.save("Hmatrix",H)
+	#np.save("Qmatrix.npy",Q_sorted)
+	#np.savetxt("Qmatrix",np.ravel(Q_sorted))
+	#np.save("QINVmatrix.npy",QINV_sorted)
+	#np.savetxt("QINVmatrix",np.ravel(QINV_sorted))
+	#np.save("lambda_eig.npy",eigval_sorted)
+	#np.savetxt("lambda_eig",eigval_sorted)
+	#np.save("mu_eig.npy",mu)
+	#np.savetxt("mu_eig",mu)
 
-	return Q_sorted,QINV_sorted,eigval_sorted,mu
+	return UILI, H, Q_sorted, QINV_sorted, eigval_sorted, mu
 
-def mode_mad(traj,Q,QINV):
+def mode_mad(traj, protname, N, nfrs, Q, QINV, T, nmodes = 10):
 	import numpy as np
 	import matplotlib.pyplot as plt
+	import os
+	import subprocess
 	import physt
 
 	pi = np.pi
-	#Get basic information from the protname.txt file
-	txt = np.genfromtxt('protname.txt',dtype=str)
-	protname = txt[0]
-	N = int(txt[1])
-	nfrs = int(txt[2])
-	natoms = int(txt[3])
 
-	print(protname,N,nfrs,natoms)
+	print(protname, N, nfrs)
 
-	traj = np.load(str(traj))
 	rx = np.zeros((N,nfrs))
 	ry = np.zeros((N,nfrs))
 	rz = np.zeros((N,nfrs))
 
-	for numba,k in enumerate(range(0,N*nfrs,N)):
-		rx[:,numba] = traj[k:k+N,0]
-		ry[:,numba] = traj[k:k+N,1]
-		rz[:,numba] = traj[k:k+N,2]
+	#Already saved the formatted trajectory
+	for numba, i in enumerate(range(0, 3*N, 3)):
+		rx[numba, :] = traj[i, :]
+		ry[numba, :] = traj[i + 1, :]
+		rz[numba, :] = traj[i + 2, :]
 
 	#Define bond vectors
 	lx = rx[:-1,:] - rx[1:,:] 
@@ -400,70 +377,93 @@ def mode_mad(traj,Q,QINV):
 	theta = np.arccos(xiz/xim)
 	phi = np.arctan(xiy/xix)
 
-	for a in range(N-1):
-		for k in range(nfrs):
-			if xix[a,k] <= 0.0:
-				phi[a,k] += pi
-			if phi[a,k] <= 0.0:
-				phi[a,k] += 2*pi
+	if nmodes > N - 1:
+		raise ValueError('''Specified more modes than are generated by the analysis.\n
+			The isotropic LE4PD generates N - 1 modes, with N the number of residues in the protein.''')
+	else:
 
-	#theta = np.rad2deg(theta)
-	#phi = np.rad2deg(phi)
+		for a in range(N - 1):
+			for k in range(nfrs):
+				if xix[a,k] <= 0.0:
+					phi[a,k] += pi
+				if phi[a,k] <= 0.0:
+					phi[a,k] += 2*pi
 
-	#Make histogram
-	kT = 0.00198*float(np.loadtxt('temp'))
-	fmadlist = []
-	for a in range(N-1):
-		x=xim[a,:]*np.sin(theta[a,:])*np.cos(phi[a,:])
-		y=xim[a,:]*np.sin(theta[a,:])*np.sin(phi[a,:])
-		z=xim[a,:]*np.cos(theta[a,:])
-		h=physt.special.spherical_histogram(np.column_stack([x,y,z]),theta_bins=50,phi_bins=50,radial_bins=1)
-		his=(h.densities[0]/h.densities[0].sum()).T
-		fes = -kT*np.log(his)
-		#fes -= fes.min()
-		femax = -kT*np.log(1/nfrs)
-		for j in range(fes.shape[0]):
-			for k in range(fes.shape[1]):
-				if np.isinf(fes[j,k]) == True:
-					fes[j,k] = femax
-					
-		#xx,yy=np.meshgrid(np.linspace(0,180,his.shape[1]),np.linspace(0,360,his.shape[0]))
-		#im=plt.contourf(xx,yy,fes,levels=np.linspace(fes.min(),fes.max(),25),cmap='gnuplot')
-		#cbar=plt.colorbar(im)
-		#cbar.set_label(r'Free Energy $(k_BT)$')
-		#plt.contour(xx,yy,fes,levels=np.linspace(fes.min(),fes.max(),25),colors='k')
-		#plt.xlabel(r'$\theta$ (deg)')
-		#plt.ylabel(r'$\phi$ (deg)')
-		#plt.savefig('fes'+str(a+1)+'.eps',dpi=300)
-		#plt.show()
-		#plt.close()
-		dummy = list(np.ravel(fes))
-		#Cut-off for outliers 
-		cut = -kT*np.log(2/nfrs)
-		for num,i in enumerate(dummy):
-			if i >= cut: dummy.remove(i)
-		fmad = np.median(abs(np.array(dummy) - fes.min()))
+		#theta = np.rad2deg(theta)
+		#phi = np.rad2deg(phi)
 
-		fmadlist.append(fmad)
-		np.save('fes'+str(a+1)+'.npy',fes)
-		np.save('theta_phi_'+str(a+1)+'.npy',np.column_stack([xim[a,:],np.rad2deg(theta[a,:]),np.rad2deg(phi[a,:])]))
-		np.savetxt("xi_"+str(a+1)+'.xvg',xi[a,:])
-		np.save("xi_"+str(a+1)+'.npy',xi[a,:])
-	np.savetxt('barriers_kcal.dat',np.array(fmadlist))
-	np.savetxt('barriers.dat',np.array(fmadlist)/kT)
+		#Make histogram
+		kT = 0.00198*T
+		fmadlist = []
+		for a in range(N - 1):
+			x=xim[a,:]*np.sin(theta[a,:])*np.cos(phi[a,:])
+			y=xim[a,:]*np.sin(theta[a,:])*np.sin(phi[a,:])
+			z=xim[a,:]*np.cos(theta[a,:])
+			h=physt.special.spherical_histogram(np.column_stack([x,y,z]),theta_bins=50,phi_bins=50,radial_bins=1)
+			his=(h.densities[0]/h.densities[0].sum()).T
+			fes = -kT*np.log(his)
+			#fes -= fes.min()
+			femax = -kT*np.log(1/nfrs)
+			for j in range(fes.shape[0]):
+				for k in range(fes.shape[1]):
+					if np.isinf(fes[j,k]) == True:
+						fes[j,k] = femax
+						
+			#xx,yy=np.meshgrid(np.linspace(0,180,his.shape[1]),np.linspace(0,360,his.shape[0]))
+			#im=plt.contourf(xx,yy,fes,levels=np.linspace(fes.min(),fes.max(),25),cmap='gnuplot')
+			#cbar=plt.colorbar(im)
+			#cbar.set_label(r'Free Energy $(k_BT)$')
+			#plt.contour(xx,yy,fes,levels=np.linspace(fes.min(),fes.max(),25),colors='k')
+			#plt.xlabel(r'$\theta$ (deg)')
+			#plt.ylabel(r'$\phi$ (deg)')
+			#plt.savefig('fes'+str(a+1)+'.eps',dpi=300)
+			#plt.show()
+			#plt.close()
+			dummy = list(np.ravel(fes))
+			#Cut-off for outliers 
+			cut = -kT*np.log(2/nfrs)
+			for num,i in enumerate(dummy):
+				if i >= cut: dummy.remove(i)
+			fmad = np.median(abs(np.array(dummy) - fes.min()))
 
-def tau_convert(eigvals,sigma,bar):
+			fmadlist.append(fmad)
+
+		#Make a directory for this mode-dependent analysis
+		if os.path.exists('mode_analysis'):
+			pass
+		else:
+			os.mkdir('mode_analysis/')
+		path = 'mode_analysis/'
+
+		for a in range(nmodes):
+			np.save(path + 'fes'+str(a+1)+'.npy', fes)
+			np.save(path + 'theta_phi_'+str(a+1)+'.npy', np.column_stack([np.rad2deg(theta[a,:]),np.rad2deg(phi[a,:]), xim[a,:]]))
+			np.save(path + "xi_"+str(a+1)+'.npy', xi[a,:])
+		np.savetxt(path + 'barriers_kcal.dat', np.array(fmadlist))
+		np.savetxt(path + 'barriers.dat', np.array(fmadlist)/kT)
+
+		return np.array(fmadlist)/kT, xi, np.column_stack([np.rad2deg(theta[a,:]),np.rad2deg(phi[a,:]), xim[a,:]])
+
+def tau_convert(eigvals, sigma, bar, T):
 	import numpy as np
+	import os
 	
-	#Convert kT to units of kcal/mol
-	kT = 0.00198*float(np.loadtxt('temp'))
-	tau = (eigvals*sigma)**-1
-	tau_scaled = tau*np.exp(bar/kT)
-	np.savetxt('tau.dat',np.column_stack([np.arange(1,len(tau)+1),tau]))
-	np.savetxt('tau_scaled.dat',np.column_stack([np.arange(1,len(tau)+1),tau_scaled]))
+	if os.path.exists('mode_analysis'):
+		pass
+	else:
+		os.mkdir('mode_analysis/')
+	path = 'mode_analysis/'
 
-def LML(Qmatrix,avbl,mu):
+	tau = (eigvals*sigma)**-1
+	tau_scaled = tau*np.exp(bar)
+	np.savetxt(path + 'tau.dat', np.column_stack([np.arange(1,len(tau)+1),tau]))
+	np.savetxt(path + 'tau_scaled.dat', np.column_stack([np.arange(1,len(tau)+1),tau_scaled]))
+
+	return tau, tau_scaled
+
+def LML(Qmatrix, avbl, mu):
 	import numpy as np
+	import os
 	
 	LML = np.zeros_like(Qmatrix)
 	for a in range(Qmatrix.shape[0]):
@@ -471,49 +471,19 @@ def LML(Qmatrix,avbl,mu):
 			LML[i,a] = (Qmatrix[i,a]**2*avbl**2)/mu[a]
 	LML = np.sqrt(LML)
 
-	np.savetxt("LML.dat",LML)
-	np.save("LML.npy",LML)
+	if os.path.exists('mode_analysis'):
+		pass
+	else:
+		os.mkdir('mode_analysis/')
+	path = 'mode_analysis/'
+
+	np.save(path + "LML.npy", LML)
+
+	return LML
 
 #Need to run m1_f2py.sh first to generate the m1int 'module' file
-def calc_m1(N):
-	import numpy as np
-	import m1int
+#def calc_m1(N):
+#	import numpy as np
+#	import m1int
 
-	m1int.p2m1(N)
-
-def calc_Rete(traj):
-	import nummpy as np
-	import subprocess
-
-	traj = np.load(str(traj))
-	txt = np.genfromtxt('protname.txt',dtype=str)
-	protname = txt[0]
-	N = int(txt[1])
-	nfrs = int(txt[2])
-	natoms = int(txt[3])
-
-	print(protname,N,nfrs,natoms)
-
-	rx = np.zeros((N,nfrs))
-	ry = np.zeros((N,nfrs))
-	rz = np.zeros((N,nfrs))
-	Rinv = np.zeros((N,N))
-	#traj = np.load(str(traj))
-	for numba,k in enumerate(range(0,N*nfrs,N)):
-		rx[:,numba] = traj[k:k+N,0]
-		ry[:,numba] = traj[k:k+N,1]
-		rz[:,numba] = traj[k:k+N,2]
-
-	Rete = np.zeros(nfrs)
-	Rete_sq = np.zeros(nfrs)
-
-	Rete = np.sqrt((rx[-1,:] - rx[0,:])**2 + (ry[-1,:] - ry[0,:])**2 + (rz[-1,:] - rz[0,:])**2)
-	Rete_sq = ((rx[-1,:] - rx[0,:])**2 + (ry[-1,:] - ry[0,:])**2 + (rz[-1,:] - rz[0,:])**2)
-
-	np.savetxt('Rete.xvg',np.column_stack([0.2*np.arange(0,nfrs),Rete]))
-	np.savetxt('Rete_sq.xvg',np.column_stack([0.2*np.arange(0,nfrs),Rete_sq]))
-
-	subprocess.call('gmx analyze -f Rete.xvg -ac Rete_ac.xvg',shell=True)
-	subprocess.call('gmx analyze -f Rete_sq.xvg -ac Retesq_ac.xvg',shell=True)
-
-	return Rete,Rete_sq
+#	m1int.p2m1(N)

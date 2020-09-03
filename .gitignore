@@ -1,10 +1,13 @@
 # Data repository
 1ns/
+mode_analysis/
 
 # Development Tests
 test.py
 Test.ipynb
 Untitled.ipynb
+unformatted_traj.npy
+resarea.xvg
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

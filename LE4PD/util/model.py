@@ -12,8 +12,9 @@ def save(self, filename = "model.p"):
 		print("Overwriting " + filename + ". I do hope that is okay.")
 	pickle.dump(self, open(filename, "wb"))
 
-def load(self, filename = "model.p"):
+def load(filename = "model.p"):
 	try:
-		pickle.dump(self, open(filename, "wb"))
+		model = pickle.load(open(filename, "rb"))
+		return model
 	except FileNotFoundError:
 		print(filename + " does not exist. Is the correct path specified?")

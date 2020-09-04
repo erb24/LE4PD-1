@@ -1,8 +1,10 @@
 import warnings
 import numpy as np
+import subprocess
+import os 
 
 import mdtraj as md
-from LE4PD.util import prepare
+from LE4PD.util import prepare, _m1int, _m1rot
 from LE4PD.codes import LE4PD
 
 '''Module to manage topology of varying molecule types. Currently only proteins
@@ -104,7 +106,7 @@ class protein(object):
 				#status = subprocess.call("echo '3' | `which gmx` -f " + str(traj) + " -s " + str(top) + " -o " + str(protname) + ".g96", shell = True)
 			if traj.split('.')[-1] != "g96":
 				print("Only accepting .g96 file formats at this time. If you don't have a .g96 trajectory file for the alpha-carbons of \n")
-				print("the protein, please run the 'process.sh file in the main 'LE4PD' directory.")
+				print("the protein, please run the 'process.sh' file in the main 'LE4PD' directory.")
 			else:
 				self._trajfile = traj
 				self._topfile = top
@@ -169,9 +171,6 @@ class protein(object):
 
 	def LML(self):
 		self.LML = LE4PD.LML(self.Q, self.avbl, self.mu_eig)
-
-
-
 
 	'''def calculate_rmsd(self, frame = 0, atom_indices=None, precentered=False):
 		if self._trajfile is None:

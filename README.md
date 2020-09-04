@@ -11,14 +11,18 @@ The installation can be done simply with pip...
 
     pip install -e .
 
-The source files are written in Fortran, and while pre-compiled files are in LE4PD/util, it is recommended the user compile these manually.
+One can also use the 'install.sh' file, which will also complile the FORTRAN files in the LE4PD/util directory.
 
-    f2py -m _ensemble_dynamics --fcompiler=gfortran --link-llapack -c _ensemble_dynamics.f95
-    f2py -m _simulation_dynamics --fcompiler=gfortran --link-llapack -c _simulation_dynamics.f95
-
+# Requirements
+To run the analysis, all that is required is a trajectory file in .g96 format and a .pdb file with the structure of the protein of interest. The .g96 file should have been processed to remove rigid body rotation and translational motions. These codes are set up to analyze MD trajectories of proteins generated using GROMACS (https://gromacs.org). If you have a trajectory generated from another MD simulation engine, you can use a piece of software such as Open Babel (http://openbabel.org) to convert to .g96 format or 2) write your own code to convert to .g96 format. Future implementations might have to ability to accept other types of MD trajectory files
 
 # Examples
 Examples for using LE4PD are located in LE4PD/examples. Two examples are present: ensemble and trajectory. LE4PD_ensemble_example shows how to set up the analysis for an ensemble of NMR experimental data from local files or fetched from the [Protein Data Bank](http://www.rcsb.org). LE4PD_trajectory_example performs the analysis on a 1ns simulation of Ubiquitin with modified residues.
+
+# Caveats
+This implementation of the LE4PD code is still a work in progress. Right now, the code is only set up to perform an analysis of a trajectory of a single protein. That is, we have not yet added the ability to analyze protein complexes or an ensemble of structures from a PDB file. Coming soon! 
+
+It is also highly probable that the f2py settings in the install.sh file will have to be tweaked based on individual machine architectures and installations. 
 
 # References
 * __J. Copperman__ and __M. G. Guenza__ _"Mode Localization in the Cooperative Dynamics of Protein Recognition"_" Biophysical Journal (2015) (submitted) arXiv:1509.08913.

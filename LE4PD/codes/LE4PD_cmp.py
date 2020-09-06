@@ -9,10 +9,9 @@ def gen_protinfo(PROTNAME,G96,TOP):
 	NFRS = int(subprocess.check_output('grep -c "TIMESTEP" '+str(G96),shell=True))
 	NATOMS = int(subprocess.check_output('grep -c "ATOM" '+str(TOP),shell=True))
 
-	array = np.array([protname,N,NFRS,NATOMS],dtype=str)
-	np.savetxt("protname.txt",array.T,fmt="%s")
+	return N, NFRS, NATOMS
 
-def get_chain_info(PROTNAME,TOP):
+def get_chain_info(PROTNAME, TOP):
 	import subprocess
 	import numpy as np
 	from string import ascii_uppercase
@@ -40,10 +39,7 @@ def get_chain_info(PROTNAME,TOP):
 
 	for i in range(len(sum_list)):
 		if sum_list[i] != 0:
-			#np.savetxt('natoms'+str(i+1)+'.dat',np.array([sum_list[i]]))
-			with open('natoms'+str(i+1)+'.dat','w+') as f:
-				f.write(str(int(sum_list[i]))+"\n")
-			f.close()
+			sum_list[i] = int(sum_list[i])
 			
 	nres_list = np.zeros(len(ascii_uppercase))
 	for i,chain in enumerate(chain_list):
@@ -55,85 +51,64 @@ def get_chain_info(PROTNAME,TOP):
 					
 	for i in range(len(nres_list)):
 		if sum_list[i] != 0:
-			#np.savetxt('nres'+str(i+1)+'.dat',np.array([nres_list[i]]))
-			with open('nres'+str(i+1)+'.dat','w+') as f:
-				f.write(str(int(nres_list[i]))+"\n")
-			f.close()
+			nres_list[i] = int(nres_list[i])
 
-	with open('nmol.dat','w+') as f:
-		f.write(str((sum_list != 0).sum())+"\n")
-	f.close()
-	#np.savetxt('nmol.dat',np.array([(sum_list != 0).sum()],dtype=int))
+	return (sum_list != 0).sum(), np.array(nres_list[nres_list != 0], dtype = int), np.array(sum_list[sum_list != 0], dtype = int)
+
 	subprocess.call("rm -rfv tmp",shell=True)
-
-'''def gen_protinfo(PROTNAME,PDB,TOP):
-		import subprocess
-		import numpy as np
-
-		protname = str(PROTNAME)
-		N = int(subprocess.check_output('grep -c "CA" '+str(TOP),shell=True))
-		NFRS = int(subprocess.check_output('grep -c "MODEL" '+str(PDB),shell=True)-1)
-		NATOMS = int(subprocess.check_output('grep -c "ATOM" '+str(TOP),shell=True))
-
-		array = np.array([protname,N,NFRS,NATOMS],dtype=str)
-		np.savetxt("protname.txt",array.T,fmt="%s")'''
-
-'''def convert_traj(traj):
-	import numpy as np
-	traj = np.loadtxt(str(traj))
-	#Save the trajectory in units of nm
-	np.save('unformatted_traj.npy',traj/10.0)'''
 
 def convert_traj(G96):
 	import numpy as np
 	import subprocess
-	subprocess.call("sed '/BOX/, +1 d' "+str(G96)+" | sed '/TITLE/, +1 d' | awk 'NF==3' > tmp",shell=True)
-	traj = np.loadtxt('tmp')
+	import platform
 
-	np.save('unformatted_traj.npy',traj)
-	subprocess.call('rm -rfv tmp',shell=True)
+	#Check which system the code is run on. If Linux, I can use 'sed'. For Darwin (macOS) I need 'gsed'.
+	if platform.system() == 'Linux':
+		status = subprocess.call("sed '/BOX/, +1 d' " + str(G96) + " | sed '/TITLE/, +1 d' | awk 'NF==3' > tmp",shell=True)
+	elif platform.system() == 'Darwin':
+		status = subprocess.call("gsed '/BOX/, +1 d' " + str(G96) + " | gsed '/TITLE/, +1 d' | awk 'NF==3' > tmp",shell=True)
+	else:
+		raise OSError("System platform not recognized.")
+	if status == 0:
+		traj = np.loadtxt('tmp')
 
-def make_unformatted_traj(G96):
+		#np.save('unformatted_traj.npy',traj)
+		subprocess.call('rm -rfv tmp', shell=True)
+		return traj
+	else:
+		raise OSError('''Something has gone incorrectly and the unformatted trajectory was not generated.
+		Please check where the .g96 file is located and make sure the correct PATH is specified 
+		in the call to this function.''')
+
+def format_traj(traj, N, NFRS):
 	import numpy as np
-	import sys
 
-	txt = np.genfromtxt('protname.txt',dtype=str)
-	protname = txt[0]
-	N = int(txt[1])
-	nfrs = int(txt[2])
-	#natoms = int(txt[3])
+	ftraj = np.zeros((3*N, NFRS))
+	for numba, k in enumerate(range(0, N*NFRS, N)):
+		ftraj[::3, numba] = traj[k:k+N, 0]
+		ftraj[1::3, numba] = traj[k:k+N, 1]
+		ftraj[2::3, numba] = traj[k:k+N, 2]
 
-	print(G96)
-	print(protname,N,nfrs)
+	return ftraj
 
-	dummy = True                    
-	linr = []
-	with open(G96) as f:
-		for line in f:
-			value = line.split()[0].isalpha()
-			if (dummy == False) and (value == False):
-				linr.append(line_prev.split())
-				linr.append(line.split())
-				for i in range(N-2):
-					linr.append(f.readline().split())
-			dummy = value
-			line_prev = line
-
-	np.save('unformatted_traj.npy',np.array(linr,dtype=float))
-
-def Umatrix(traj):
+def Umatrix(traj, protname, N, nfrs, natoms, nmol):
 	import numpy as np
-	txt = np.genfromtxt('protname.txt',dtype=str)
-	protname = txt[0]
-	N = int(txt[1])
-	nfrs = int(txt[2])
-	natoms = int(txt[3])
+
+	#Allocate arrays containing the number of alpha-carbons per molecule
+	nca = np.zeros(nmol)
+	for i in range(nmol):
+		nca[i] = int(np.loadtxt('nres'+str(i+1)+".dat"))
+	nca_cumsum = np.cumsum(nca)
+
 
 	print(protname,N,nfrs,natoms)
 
 	rx = np.zeros((N,nfrs))
 	ry = np.zeros((N,nfrs))
 	rz = np.zeros((N,nfrs))
+	lx = np.zeros((N - nmol, nfrs))
+	ly = np.zeros((N - nmol, nfrs))
+	lz = np.zeros((N - nmol, nfrs))
 	Rinv = np.zeros((N,N))
 	traj = np.load(str(traj))
 	for numba,k in enumerate(range(0,N*nfrs,N)):
@@ -142,9 +117,20 @@ def Umatrix(traj):
 		rz[:,numba] = traj[k:k+N,2]
 
 	#Define bond vectors
-	lx = rx[:-1,:] - rx[1:,:] 
-	ly = ry[:-1,:] - ry[1:,:]
-	lz = rz[:-1,:] - rz[1:,:]
+	counter = 0
+	mol_counter = 0
+	i = 1
+	while i <= N:
+		if i == nca_cumsum[mol_counter]:
+			i += 1
+			mol_counter += 1
+			if mol_counter == nmol: break
+		else:
+			lx[counter,:] = rx[i,:] - rx[i-1,:] 
+			ly[counter,:] = ry[i,:] - ry[i-1,:]
+			lz[counter,:] = rz[i,:] - rz[i-1,:]
+			counter += 1
+			i += 1
 
 	#Calculate average inverse distances for the
 	#hydrodynamic interaction matrix
@@ -156,9 +142,9 @@ def Umatrix(traj):
 					Rinv[i,j] = (1/np.sqrt((rx[i,:] - rx[j,:])**2 + (ry[i,:] - ry[j,:])**2 + (rz[i,:] - rz[j,:])**2)).sum()
 				Rinv[j,i] = Rinv[i,j]
 	Rinv = Rinv/nfrs
-	lavm = np.zeros(N-1)
-	lavmsq = np.zeros(N-1)
-	avdot = np.zeros(N-1)
+	lavm = np.zeros(N - nmol)
+	lavmsq = np.zeros(N - nmol)
+	avdot = np.zeros(N - nmol)
 	avblsq = 0
 	avbl = 0
 
@@ -166,7 +152,7 @@ def Umatrix(traj):
 	avgy = ly.mean(1)
 	avgz = lz.mean(1)
 
-	for i in range(N-1):
+	for i in range(N - nmol):
 		for k in range(nfrs):
 			dummy = lx[i,k]**2 + ly[i,k]**2 + lz[i,k]**2
 			lavm[i] += np.sqrt(dummy)
@@ -176,18 +162,18 @@ def Umatrix(traj):
 		avdot[i] = avgx[i]**2 + avgy[i]**2 + avgz[i]**2
 	lavm = lavm/nfrs
 	lavmsq = lavmsq/nfrs
-	avblsq = (avblsq/(N-1))/nfrs
-	avbl = (avbl/(N-1))/nfrs
+	avblsq = (avblsq/(N - nmol))/nfrs
+	avbl = (avbl/(N - nmol))/nfrs
 
 	print(avbl,avblsq)
 
-	Umat = np.zeros((N-1,N-1))
-	for i in range(N-1):
-		for j in range(N-1):
+	Umat = np.zeros((N - nmol,N - nmol))
+	for i in range(N - nmol):
+		for j in range(N - nmol):
 			Umat[i,j] = (np.dot(lx[i,:],lx[j,:]) + np.dot(ly[i,:],ly[j,:]) + np.dot(lz[i,:],lz[j,:]))/(lavm[i]*lavm[j]*nfrs)
 
 	np.save('Umatrix.npy',Umat)
-	np.savetxt('Umatrix',np.insert(np.ravel(Umat),N-1,0))
+	np.savetxt('Umatrix',np.insert(np.ravel(Umat),N - nmol,0))
 	np.save('Rinv.npy',Rinv)
 	np.savetxt('Rij',np.ravel(Rinv))
 	np.savetxt('length',lavm)
@@ -219,7 +205,8 @@ def fric_calc(PROTNAME,TOP):
 
 	#Calculate the Miller radius per bead
 	mradlist = []
-	with open(TOP) as f:
+	#with open(TOP) as f:
+	with open ("CA.pdb") as f:
 		for line in f:
 			if line[0:4] != 'ATOM':
 				#print(line)
@@ -250,6 +237,9 @@ def fric_calc(PROTNAME,TOP):
 				elif dummy[3] == "TRP" : mradlist.append((259.0/(4*pi))**.5)
 				elif dummy[3] == "TYR" : mradlist.append((229.0/(4*pi))**.5)
 				elif dummy[3] == "VAL" : mradlist.append((160.0/(4*pi))**.5)
+				elif dummy[3] == "NLM" : mradlist.append((158.0/(4*pi))**.5) #ASN-NAG
+				elif dummy[3] == "NMG" : mradlist.append((158.0/(4*pi))**.5) #ASN-NAG
+				elif dummy[3] == "CYX" : mradlist.append((140.0/(4*pi))**.5) #Some modified CYS
 
 	array = np.array(mradlist,dtype=str)
 	np.savetxt('mrad.dat',np.array(mradlist).T,fmt='%s')
@@ -261,12 +251,34 @@ def fric_calc(PROTNAME,TOP):
 	else:
 		subprocess.call("echo '1' | gmx_mpi sasa -f "+str(PROTNAME)+".xtc -s "+str(TOP)+" -or resarea.xvg -dt 100",shell=True)
 	resarea = []
+
+	#Ignore 'residue' 26 (ACE on N-terminal resiude) and the second of 'residue' 1147 (NME on C-terminal residue)
+	chk = False
 	with open('resarea.xvg') as f:
 		for line in f:
 			if line[0] == '#' or line[0] == '@':
 				pass
 			else:
+				#if line.split()[0] == '26':
+				#	continue
+				#if line.split()[0] == dummy:
+				#	continue
 				resarea.append(float(line.split()[1]))
+			dummy = line[0]
+
+	#Re-order the residues in the output to account for the non-canonical residues
+	#Or not
+	#shuffle_list = np.loadtxt('shuffle_list.dat')
+
+	#darray = np.zeros_like(shuffle_list,dtype=int)
+	#for i, numba in enumerate(shuffle_list):
+	#	darray[i] = int(shuffle_list[i])
+	#shuffle_list = darray
+	#print(darray)
+	#print(shuffle_list)
+
+	#resarea = np.array(resarea)[shuffle_list]
+	#resarea = list(resarea)
 
 	rad = []
 	for area in resarea:
@@ -302,12 +314,12 @@ def fric_calc(PROTNAME,TOP):
 
 	try:
 		#Load viscosity and convert to Pa s
-		viscosity = float(np.loadtxt('visc.txt'))/1000 
+		viscosity = float(np.loadtxt('visc.txt'))
 	except OSError:
 		print('No viscosity given. Using the NIST formula, which is only valid for physiological conditions,')
 		print('i.e. between about 273 and 310 K.')
 		viscosity = (.2131590-1.96290E-3*T+(.00246411*T)**2+(-.0018462*T)**3)
-		np.savetxt('visc,txt',np.array([viscosity]))
+		np.savetxt('visc.txt',np.array([viscosity/1000]))
 
 	print("Viscosity (Pa s): ",viscosity)
 	
@@ -361,7 +373,7 @@ def fric_calc(PROTNAME,TOP):
 
 	return fratio,sigma,fric
 
-def LUI_calc(fratio,avblsq,sigma,fric,Rinv,T=300):
+def LUI_calc(fratio,avblsq,sigma,fric,Rinv):
 	import numpy as np
 	#Get basic information from the protname.txt file
 	txt = np.genfromtxt('protname.txt',dtype=str)
@@ -369,6 +381,13 @@ def LUI_calc(fratio,avblsq,sigma,fric,Rinv,T=300):
 	N = int(txt[1])
 	nfrs = int(txt[2])
 	natoms = int(txt[3])
+	nmol = int(np.loadtxt('nmol.dat'))
+
+	#Allocate arrays containing the number of alpha-carbons per molecule
+	nca = np.zeros(nmol)
+	for i in range(nmol):
+		nca[i] = int(np.loadtxt('nres'+str(i+1)+".dat"))
+	nca_cumsum = np.cumsum(nca)
 
 	print(protname,N,nfrs,natoms)
 
@@ -376,17 +395,30 @@ def LUI_calc(fratio,avblsq,sigma,fric,Rinv,T=300):
 
 	M = np.zeros((N,N))
 
+	idx = 0
+	counter = 1
 	for i in range(N):
-		for j in range(N):
-			if i == 0: 
+		if i == idx:
+			for j in range(N):
 				M[i,j] = 1/N
-			else:
+			idx = nca_cumsum[counter - 1]
+			counter += 1
+		else:
+			for j in range(N):
 				if i == j + 1:
 					M[i,j] = -1
 				elif i == j:
 					M[i,j] = 1
 
-	a = M[1:,:]
+	a = np.zeros((N - nmol,N))
+	counter = 0
+	for i in range(N):
+		if ((i == 0) or (np.where(nca_cumsum == i)[0].size == 1)):
+			#print('here')
+			pass
+		else:
+			a[counter,:] = M[i,:]
+			counter += 1
 
 	H = np.zeros((N,N))
 
@@ -410,6 +442,32 @@ def LUI_calc(fratio,avblsq,sigma,fric,Rinv,T=300):
 	eigval,Q = np.linalg.eig(UILI)
 	eigval = 1/eigval
 	QINV = np.linalg.inv(Q)
+
+	#Implement fratio loop to avoid negative eigenvalues of LU matrix
+	while (np.any(1/eigval <= 1e-9) and fratio >= 0.0):
+		fratio -= 0.01
+		print(fratio,(1/eigval)[np.where(1/eigval <= 0)])
+		H = np.zeros((N,N))
+		for i in range(N):
+			for j in range(i,N):
+				if i == j:
+					H[i,i] = avfr/fric[i+1,1]
+				else:
+					H[i,j] = fratio*Rinv[i,j]
+					H[j,i] = H[i,j]
+
+		L = np.matmul(a,np.matmul(H,a.T))
+
+		LINV = np.linalg.inv(L)
+		L = np.matmul(a,np.matmul(H,a.T))
+		LINV = np.linalg.inv(L)
+		UINV = np.load("Umatrix.npy")
+		UILI = np.matmul(UINV,LINV)
+
+		#Eigendecomposition of UILI to find eigenvalues and eigenvectors 
+		eigval,Q = np.linalg.eig(UILI)
+		eigval = 1/eigval
+		QINV = np.linalg.inv(Q)
 
 	perm = np.argsort(np.abs(eigval))
 
@@ -447,6 +505,13 @@ def mode_mad(traj,Q,QINV):
 	N = int(txt[1])
 	nfrs = int(txt[2])
 	natoms = int(txt[3])
+	nmol = int(np.loadtxt('nmol.dat'))
+
+	#Allocate arrays containing the number of alpha-carbons per molecule
+	nca = np.zeros(nmol)
+	for i in range(nmol):
+		nca[i] = int(np.loadtxt('nres'+str(i+1)+".dat"))
+	nca_cumsum = np.cumsum(nca)
 
 	print(protname,N,nfrs,natoms)
 
@@ -454,16 +519,30 @@ def mode_mad(traj,Q,QINV):
 	rx = np.zeros((N,nfrs))
 	ry = np.zeros((N,nfrs))
 	rz = np.zeros((N,nfrs))
-
+	lx = np.zeros((N - nmol, nfrs))
+	ly = np.zeros((N - nmol, nfrs))
+	lz = np.zeros((N - nmol, nfrs))
+	Rinv = np.zeros((N,N))
 	for numba,k in enumerate(range(0,N*nfrs,N)):
 		rx[:,numba] = traj[k:k+N,0]
 		ry[:,numba] = traj[k:k+N,1]
 		rz[:,numba] = traj[k:k+N,2]
 
 	#Define bond vectors
-	lx = rx[:-1,:] - rx[1:,:] 
-	ly = ry[:-1,:] - ry[1:,:]
-	lz = rz[:-1,:] - rz[1:,:]
+	counter = 0
+	mol_counter = 0
+	i = 1
+	while i <= N:
+		if i == nca_cumsum[mol_counter]:
+			i += 1
+			mol_counter += 1
+			if mol_counter == nmol: break
+		else:
+			lx[counter,:] = rx[i,:] - rx[i-1,:] 
+			ly[counter,:] = ry[i,:] - ry[i-1,:]
+			lz[counter,:] = rz[i,:] - rz[i-1,:]
+			counter += 1
+			i += 1
 
 	xix = np.matmul(QINV,lx)
 	xiy = np.matmul(QINV,ly)
@@ -474,7 +553,7 @@ def mode_mad(traj,Q,QINV):
 	theta = np.arccos(xiz/xim)
 	phi = np.arctan(xiy/xix)
 
-	for a in range(N-1):
+	for a in range(N - nmol):
 		for k in range(nfrs):
 			if xix[a,k] <= 0.0:
 				phi[a,k] += pi
@@ -487,7 +566,7 @@ def mode_mad(traj,Q,QINV):
 	#Make histogram
 	kT = 0.00198*float(np.loadtxt('temp'))
 	fmadlist = []
-	for a in range(N-1):
+	for a in range(N - nmol):
 		x=xim[a,:]*np.sin(theta[a,:])*np.cos(phi[a,:])
 		y=xim[a,:]*np.sin(theta[a,:])*np.sin(phi[a,:])
 		z=xim[a,:]*np.cos(theta[a,:])
@@ -547,47 +626,3 @@ def LML(Qmatrix,avbl,mu):
 
 	np.savetxt("LML.dat",LML)
 	np.save("LML.npy",LML)
-
-#Need to run m1_f2py.sh first to generate the m1int 'module' file
-def calc_m1(N):
-	import numpy as np
-	import m1int
-
-	m1int.p2m1(N)
-
-def calc_Rete(traj):
-	import nummpy as np
-	import subprocess
-
-	traj = np.load(str(traj))
-	txt = np.genfromtxt('protname.txt',dtype=str)
-	protname = txt[0]
-	N = int(txt[1])
-	nfrs = int(txt[2])
-	natoms = int(txt[3])
-
-	print(protname,N,nfrs,natoms)
-
-	rx = np.zeros((N,nfrs))
-	ry = np.zeros((N,nfrs))
-	rz = np.zeros((N,nfrs))
-	Rinv = np.zeros((N,N))
-	#traj = np.load(str(traj))
-	for numba,k in enumerate(range(0,N*nfrs,N)):
-		rx[:,numba] = traj[k:k+N,0]
-		ry[:,numba] = traj[k:k+N,1]
-		rz[:,numba] = traj[k:k+N,2]
-
-	Rete = np.zeros(nfrs)
-	Rete_sq = np.zeros(nfrs)
-
-	Rete = np.sqrt((rx[-1,:] - rx[0,:])**2 + (ry[-1,:] - ry[0,:])**2 + (rz[-1,:] - rz[0,:])**2)
-	Rete_sq = ((rx[-1,:] - rx[0,:])**2 + (ry[-1,:] - ry[0,:])**2 + (rz[-1,:] - rz[0,:])**2)
-
-	np.savetxt('Rete.xvg',np.column_stack([0.2*np.arange(0,nfrs),Rete]))
-	np.savetxt('Rete_sq.xvg',np.column_stack([0.2*np.arange(0,nfrs),Rete_sq]))
-
-	subprocess.call('gmx analyze -f Rete.xvg -ac Rete_ac.xvg',shell=True)
-	subprocess.call('gmx analyze -f Rete_sq.xvg -ac Retesq_ac.xvg',shell=True)
-
-	return Rete,Rete_sq

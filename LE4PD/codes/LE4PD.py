@@ -134,7 +134,7 @@ def Umatrix(traj, protname, N, nfrs, natoms):
 
 	return Umat, Rinv, avbl, avblsq
 
-def fric_calc(TOP, protname, N, nfrs, natoms, avblsq, T, intv = 2.71828, viscosity = 1e-3, fd20 = 0.0):
+def fric_calc(TOP, protname, N, nfrs, natoms, avblsq, T, intv = 2.71828, viscosity = 1e-3, fd20 = 0.0, path_to_resarea = './'):
 	import numpy as np
 	import sys
 	import os
@@ -184,14 +184,14 @@ def fric_calc(TOP, protname, N, nfrs, natoms, avblsq, T, intv = 2.71828, viscosi
 
 
 	#Calculate the average solvent-exposed surface area per bead
-	if os.path.exists("resarea.xvg"):
+	if os.path.exists(path_to_resarea + "resarea.xvg"):
 		pass
 	else:
-		raise FileNotFoundError('''I can't find the resarea.xvg file containing the solvent-exposed surface area of each residue.\n
-								Please either run the process.sh file, if you have not already done so, and move the resarea.xvg\n 
+		raise FileNotFoundError('''I can't find the resarea.xvg file containing the solvent-exposed surface area of each residue.
+								Please either run the process.sh file, if you have not already done so, and move the resarea.xvg 
 								file into the current working directory.''')
 	resarea = []
-	with open('resarea.xvg') as f:
+	with open(path_to_resarea + 'resarea.xvg') as f:
 		for line in f:
 			if line[0] == '#' or line[0] == '@':
 				pass

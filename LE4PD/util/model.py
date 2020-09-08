@@ -10,7 +10,7 @@ import pickle
 def save(self, filename = "model.p"):
 	if os.path.exists(filename):
 		print("Overwriting " + filename + ". I do hope that is okay.")
-	pickle.dump(self, open(filename, "wb"))
+	pickle.dump(self, open(filename, "wb"), protocol = 4)
 
 def load(filename = "model.p"):
 	try:

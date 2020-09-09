@@ -24,9 +24,9 @@ Examples for using LE4PD are located in LE4PD/examples. Two examples are present
 Running the full LE4PD analysis (including saving the model to file) takes about 1 minute per 50 000 frames of trajectory data and scales approximately linearly up to 1 500 000 frames of trajectory data. These benchmarking data were generated running the code on the Comet supercomputer at the San Diego Supercomputing Center (https://www.sdsc.edu/support/user_guides/comet.html). 
 
 # Caveats
-This implementation of the LE4PD code is still a work in progress. Right now, the code is only set up to perform an analysis of a trajectory of a single protein. That is, we have not yet added the ability to analyze protein complexes or an ensemble of structures from a PDB file. Coming soon! 
+This implementation of the LE4PD code is still a work in progress. Right now, the code is only set up to perform an analysis of a trajectory of either a single protein or a complex of proteins. That is, we have not yet added the ability to analyze an ensemble of structures from a PDB file (as is described in the fourth reference in the list below). Coming soon! 
 
-It is also highly probable that the f2py settings in the install.sh file will have to be tweaked based on individual machine architectures and installations. 
+It is possible that the f2py settings in the install.sh file will have to be tweaked based on individual machine architectures and installations. 
 
 # References
 

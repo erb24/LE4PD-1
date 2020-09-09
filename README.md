@@ -29,7 +29,10 @@ This implementation of the LE4PD code is still a work in progress. Right now, th
 It is also highly probable that the f2py settings in the install.sh file will have to be tweaked based on individual machine architectures and installations. 
 
 # References
-* __J. Copperman__ and __M. G. Guenza__ _"Mode Localization in the Cooperative Dynamics of Protein Recognition"_" Biophysical Journal (2015) (submitted) arXiv:1509.08913.
+
+* __E. R. Beyerle__ and __M. G. Guenza__ _"Kinetics analysis of ubiquitin local fluctuations with Markov state modeling ofthe LE4PD normal modes"_" *Journal of Chemical Physics*, **151**, 164119  (2019) DOI:10.1063/1.5123513 .
+* __M. Dinpajooh__, __J. Copperman__, __E. R. Beyerle__, and __M. G. Guenza__ _"Universality and Specificity in Protein Fluctuation Dynamics"_" *Physical Review Letters*, **119**, 158101  (2017) DOI:10.1103/PhysRevLett.119.158101 .
+* __J. Copperman__ and __M. G. Guenza__ _"Mode Localization in the Cooperative Dynamics of Protein Recognition"_" *Journal of Chemical Physics*, **145**, 015101 (2016) DOI:10.1063/1.4954506 .
 * __J. Copperman__ and __M. G. Guenza__ _"Predicting protein dynamics from structural ensembles” Journal of Chemical Physics, Invited Contribution for Special Topics Issue on Coarse Graining of Macromolecules, Biopolymers, and Membranes"_" 143, 243131-12 (2015) doi: 10.1063/1.4935575.
 * __J. Copperman__, __M. G. Guenza__ _"A Coarse-Grained Langevin Equation for Protein Dynamics: Global anisotropy and a mode approach to local complexity"_" J. Phys. Chem. B, Festschrift issue honoring Branka Ladanyi, 119,  9195 (2015). DOI:10.1021/jp509473z.
 * __E. Caballero-Manrique__, __M. G. Guenza__ _"A Langevin Equation Approach to Bridge Different Timescales of Relaxation in Protein Dynamics"_" 51st Annual Meeting of the Biophysical Society, MAR 03-07, 2007. Biophysical Journal 377A (2007).

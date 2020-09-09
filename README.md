@@ -19,6 +19,10 @@ To run the analysis, all that is required is a trajectory file in .g96 format an
 # Examples
 Examples for using LE4PD are located in LE4PD/examples. Two examples are present: ensemble and trajectory. LE4PD_ensemble_example shows how to set up the analysis for an ensemble of NMR experimental data from local files or fetched from the [Protein Data Bank](http://www.rcsb.org). LE4PD_trajectory_example performs the analysis on a 1ns simulation of Ubiquitin with modified residues.
 
+# Computational Performance
+
+Running the full LE4PD analysis (including save the model to file) takes about 1 minute per 50 000 frames of trajectory data and scales approximately linearly up to 1 500 000 frames of trajectory data. These benchmarking data were generated running the code on the Comet supercomputer at teh San Diego Supercomputing Center (https://www.sdsc.edu/support/user_guides/comet.html). 
+
 # Caveats
 This implementation of the LE4PD code is still a work in progress. Right now, the code is only set up to perform an analysis of a trajectory of a single protein. That is, we have not yet added the ability to analyze protein complexes or an ensemble of structures from a PDB file. Coming soon! 
 

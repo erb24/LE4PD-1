@@ -534,6 +534,9 @@ def mode_mad(traj, protname, N, nfrs, nmol, nca, Q, QINV, T, nmodes = 10):
 			fmad = np.median(abs(np.array(dummy) - fes.min()))
 
 			fmadlist.append(fmad)
+			
+			if a <= nmodes:
+				np.save(path + 'fes'+str(a+1)+'.npy', fes)
 
 		#Make a directory for this mode-dependent analysis
 		if os.path.exists('mode_analysis'):
@@ -543,7 +546,6 @@ def mode_mad(traj, protname, N, nfrs, nmol, nca, Q, QINV, T, nmodes = 10):
 		path = 'mode_analysis/'
 
 		for a in range(nmodes):
-			np.save(path + 'fes'+str(a+1)+'.npy', fes)
 			np.save(path + 'theta_phi_'+str(a+1)+'.npy', np.column_stack([np.rad2deg(theta[a,:]),np.rad2deg(phi[a,:]), xim[a,:]]))
 			np.save(path + "xi_"+str(a+1)+'.npy', xi[a,:])
 		np.savetxt(path + 'barriers_kcal.dat', np.array(fmadlist))

@@ -5,7 +5,7 @@ setup(
     version = '0.3',
     author = 'Pablo Romano and Eric Beyerle',
     description = 'Python API for Protein Dynamics using the Langevin Formalism (LE4PD)',
-    url = 'https://github.com/erb24/LE4PD',
+    url = 'https://github.com/GuenzaLab/LE4PD',
 
     packages = ['LE4PD'],
     install_requires=[

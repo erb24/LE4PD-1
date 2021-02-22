@@ -284,7 +284,7 @@ def fric_calc(TOP, protname, N, nfrs, natoms, avblsq, T, fric, path_to_resarea =
 	avfr = fric.mean()*1e-9
 
 	#avblsq = float(np.loadtxt('avblsq'))
-	sigma = (3*kB*T*1E15)/(avblsq*avfr)
+	sigma = (3*kB*T*1E6)/(avblsq*avfr)
 
 	return fratio, sigma, fric, avfr
 

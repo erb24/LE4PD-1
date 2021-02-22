@@ -134,7 +134,10 @@ def Umatrix(traj, protname, N, nfrs, natoms):
 
 	return Umat, Rinv, avbl, avblsq
 
-def fric_calc(TOP, protname, N, nfrs, natoms, avblsq, T, intv = 2.71828, viscosity = 1e-3, fd20 = 0.0, path_to_resarea = './'):
+#Read in the friction coefficients from an external file, where they have been stored after being calculated from, say,
+#a Green-Kubo relation. Still need to caclulate the effective radius exposed to solvent, though, since I need that
+#parameter for the calculation of the hydrodynamic interaction.
+def fric_calc(TOP, protname, N, nfrs, natoms, avblsq, T, fric, path_to_resarea = './'):
 	import numpy as np
 	import sys
 	import os
@@ -178,10 +181,7 @@ def fric_calc(TOP, protname, N, nfrs, natoms, avblsq, T, intv = 2.71828, viscosi
 				elif dummy[3] == "TRP" : mradlist.append((259.0/(4*pi))**.5)
 				elif dummy[3] == "TYR" : mradlist.append((229.0/(4*pi))**.5)
 				elif dummy[3] == "VAL" : mradlist.append((160.0/(4*pi))**.5)
-
-	#mrad_array = np.array(mradlist,dtype=str)
-	#np.savetxt('mrad.dat',np.array(mradlist).T,fmt='%s')
-
+				
 
 	#Calculate the average solvent-exposed surface area per bead
 	if os.path.exists(path_to_resarea + "resarea.xvg"):
@@ -212,59 +212,12 @@ def fric_calc(TOP, protname, N, nfrs, natoms, avblsq, T, intv = 2.71828, viscosi
 
 	kB = 1.38066E-23
 	print('Temperature (K): ',T)
-	print('Internal viscosity factor: ',intv)
 
-	#Use NIST formula for viscosity -- good NEAR room temperature and physiological.
-	#Won't work higher than, say, 360 K.
-
-	if viscosity == 0:
-		print('No viscosity given. Using the NIST formula, which is only valid for physiological conditions,\n')
-		print('i.e. between about 273 and 310 K.')
-		viscosity = (.2131590-1.96290E-3*T+(.00246411*T)**2+(-.0018462*T)**3)
-
-	print("Viscosity (Pa s): ", viscosity)
-	print("fd20", fd20)
-
-	rv = np.array(mradlist)
-	rw = np.array(rad)
-	rp = np.zeros(N)
-	friw = np.zeros(N)
-	fri = np.zeros(N)
-	friwt = 0
-	frit = 0
-	for i in range(N):
-		if rw[i] < rv[i]: 
-			rp[i] = (rv[i]**2 - rw[i]**2)**0.5
-		else:
-			rp[i] = 0
-
-		friw[i] = 6.0*pi*(rw[i]/10)*viscosity
-		fri[i] = 6.0*pi*(rp[i]/10)*(intv*viscosity) + 6.0*pi*(rw[i]/10)*viscosity
-		friwt += friw[i]
-		frit += fri[i]
-
-	avfr = frit/float(N)
-	avfrw = friwt/float(N)
-	#np.savetxt('avfr',np.array([avfr*1.0E-9]))
+	#Calculate the average friction coefficient and convert to the appropriate units
+	avfr = fric.mean()*1e-9
 
 	#avblsq = float(np.loadtxt('avblsq'))
 	sigma = (3*kB*T*1E15)/(avblsq*avfr)
-
-	#with open('sigma','w') as f:
-	#	f.write('sigma, 1/ps\n')
-	#	f.write(str(sigma)+'\n')
-
-	#with open('sigma.dat','w') as f:
-	#	f.write(str(sigma)+'\n')
-
-	fric = np.zeros((N+1,2))
-
-	fric[0,0] = avfrw
-	fric[0,1] = avfr
-	for i in range(N):
-		fric[i+1,:] = np.column_stack([friw[i],fri[i]])
-
-	#np.savetxt('fric',fric)
 
 	return fratio, sigma, fric, avfr
 

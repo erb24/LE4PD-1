@@ -13,7 +13,6 @@ setup(
         'scipy',
         'matplotlib',
         'mdtraj',
-        'openmm',
 	'physt'
     ],
     zip_safe = False

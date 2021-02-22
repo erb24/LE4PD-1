@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name = 'LE4PD-iso',
+    name = 'LE4PDiso',
     version = '0.3',
     author = 'Pablo Romano and Eric Beyerle',
     description = 'Python API for Protein Dynamics using the Langevin Formalism (LE4PD)',

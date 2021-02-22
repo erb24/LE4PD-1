@@ -181,7 +181,7 @@ def fric_calc(TOP, protname, N, nfrs, natoms, avblsq, T, fric, path_to_resarea =
 				elif dummy[3] == "TRP" : mradlist.append((259.0/(4*pi))**.5)
 				elif dummy[3] == "TYR" : mradlist.append((229.0/(4*pi))**.5)
 				elif dummy[3] == "VAL" : mradlist.append((160.0/(4*pi))**.5)
-				
+
 
 	#Calculate the average solvent-exposed surface area per bead
 	if os.path.exists(path_to_resarea + "resarea.xvg"):
@@ -232,7 +232,8 @@ def LUI_calc(protname, N, nfrs, U, fratio, avblsq, sigma, fric, Rinv, T):
 
 	print(protname, N, nfrs)
 
-	avfr = fric[0,1]
+	fric = fric*1e-9
+	avfr = fric.mean()
 
 	M = np.zeros((N,N))
 
@@ -253,7 +254,7 @@ def LUI_calc(protname, N, nfrs, U, fratio, avblsq, sigma, fric, Rinv, T):
 	for i in range(N):
 		for j in range(i,N):
 			if i == j:
-				H[i,i] = avfr/fric[i+1,1]
+				H[i,i] = avfr/fric[i]
 			else:
 				H[i,j] = fratio*Rinv[i,j]
 				H[j,i] = H[i,j]

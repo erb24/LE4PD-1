@@ -294,7 +294,8 @@ def LUI_calc(protname, N, nfrs, nmol, nca, U, fratio, avblsq, sigma, fric, Rinv,
 	nca_cumsum = np.cumsum(nca)
 	print(protname, N, nfrs, nmol)
 
-	avfr = fric[0,1]
+	fric = fric * 1e-9
+	avfr = fric.mean()
 
 	M = np.zeros((N,N))
 
@@ -328,7 +329,7 @@ def LUI_calc(protname, N, nfrs, nmol, nca, U, fratio, avblsq, sigma, fric, Rinv,
 	for i in range(N):
 		for j in range(i,N):
 			if i == j:
-				H[i,i] = avfr/fric[i+1,1]
+				H[i,i] = avfr/fric[i]
 			else:
 				H[i,j] = fratio*Rinv[i,j]
 				H[j,i] = H[i,j]

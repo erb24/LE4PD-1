@@ -399,7 +399,10 @@ def mode_mad(traj, protname, N, nfrs, Q, QINV, T, nmodes = 10):
 			x=xim[a,:]*np.sin(theta[a,:])*np.cos(phi[a,:])
 			y=xim[a,:]*np.sin(theta[a,:])*np.sin(phi[a,:])
 			z=xim[a,:]*np.cos(theta[a,:])
-			h=physt.special.spherical_histogram(np.column_stack([x,y,z]),theta_bins=50,phi_bins=50,radial_bins=1)
+			if int(physt.__version__.split('.')[1]) <= 3:
+				h=physt.special.spherical_histogram(np.column_stack([x,y,z]),theta_bins=50,phi_bins=50,radial_bins=1)
+			else:
+				h=physt.special_histograms.spherical(np.column_stack([x,y,z]),theta_bins=50,phi_bins=50,radial_bins=1)
 			his=(h.densities[0]/h.densities[0].sum()).T
 			fes = -kT*np.log(his)
 			#fes -= fes.min()
